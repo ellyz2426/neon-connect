@@ -1,0 +1,3 @@
+<container flexDirection="column" alignItems="center" padding="0.015" backgroundColor="#000a18cc" borderRadius="0.015" borderColor="#ffcc0088" borderWidth="0.002" width="0.5" height="0.06">
+  <text name="toast-text" fontSize="0.022" color="#ffcc00" textAlign="center">Achievement Unlocked!</text>
+</container>

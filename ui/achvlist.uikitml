@@ -1,0 +1,30 @@
+<container flexDirection="column" alignItems="center" gap="0.01" padding="0.05" backgroundColor="#000a18ee" borderRadius="0.04" borderColor="#ff66ff" borderWidth="0.003" width="1.2" height="1.4">
+  <text fontSize="0.05" fontWeight="bold" color="#ff66ff">ACHIEVEMENTS</text>
+  <text name="ach-count" fontSize="0.025" color="#aaaaaa">0 / 50 unlocked</text>
+  <container flexDirection="column" gap="0.008" width="1.0" marginTop="0.01">
+    <text name="ach-1" fontSize="0.02" color="#666666">[ ] ---</text>
+    <text name="ach-2" fontSize="0.02" color="#666666">[ ] ---</text>
+    <text name="ach-3" fontSize="0.02" color="#666666">[ ] ---</text>
+    <text name="ach-4" fontSize="0.02" color="#666666">[ ] ---</text>
+    <text name="ach-5" fontSize="0.02" color="#666666">[ ] ---</text>
+    <text name="ach-6" fontSize="0.02" color="#666666">[ ] ---</text>
+    <text name="ach-7" fontSize="0.02" color="#666666">[ ] ---</text>
+    <text name="ach-8" fontSize="0.02" color="#666666">[ ] ---</text>
+    <text name="ach-9" fontSize="0.02" color="#666666">[ ] ---</text>
+    <text name="ach-10" fontSize="0.02" color="#666666">[ ] ---</text>
+    <text name="ach-11" fontSize="0.02" color="#666666">[ ] ---</text>
+    <text name="ach-12" fontSize="0.02" color="#666666">[ ] ---</text>
+    <text name="ach-13" fontSize="0.02" color="#666666">[ ] ---</text>
+    <text name="ach-14" fontSize="0.02" color="#666666">[ ] ---</text>
+    <text name="ach-15" fontSize="0.02" color="#666666">[ ] ---</text>
+    <text name="ach-16" fontSize="0.02" color="#666666">[ ] ---</text>
+    <text name="ach-17" fontSize="0.02" color="#666666">[ ] ---</text>
+    <text name="ach-18" fontSize="0.02" color="#666666">[ ] ---</text>
+  </container>
+  <container flexDirection="row" gap="0.1" marginTop="0.01">
+    <text name="btn-prev" fontSize="0.03" color="#00ccff" backgroundColor="#003355" padding="0.015" borderRadius="0.01" borderColor="#00ccff" borderWidth="0.002" hover-backgroundColor="#005577" cursor="pointer">&lt; Prev</text>
+    <text name="page-label" fontSize="0.025" color="#aaaaaa">1 / 3</text>
+    <text name="btn-next" fontSize="0.03" color="#00ccff" backgroundColor="#003355" padding="0.015" borderRadius="0.01" borderColor="#00ccff" borderWidth="0.002" hover-backgroundColor="#005577" cursor="pointer">Next &gt;</text>
+  </container>
+  <text name="btn-back" fontSize="0.035" color="#888888" backgroundColor="#222222" padding="0.02" borderRadius="0.015" borderColor="#666666" borderWidth="0.002" hover-backgroundColor="#444444" cursor="pointer" textAlign="center">BACK</text>
+</container>

@@ -1,0 +1,14 @@
+<container flexDirection="column" alignItems="center" gap="0.03" padding="0.05" backgroundColor="#000a18ee" borderRadius="0.04" borderColor="#00ccff" borderWidth="0.003" width="1.2" height="1.4">
+  <text fontSize="0.06" fontWeight="bold" color="#00ffff">SELECT MODE</text>
+  <container flexDirection="column" gap="0.02" width="1.0" marginTop="0.02">
+    <text name="btn-classic" fontSize="0.035" color="#00ffff" backgroundColor="#003355" padding="0.02" borderRadius="0.015" borderColor="#00ccff" borderWidth="0.002" hover-backgroundColor="#005577" cursor="pointer" textAlign="center">Classic - Standard 7x6</text>
+    <text name="btn-timed" fontSize="0.035" color="#ffcc00" backgroundColor="#333300" padding="0.02" borderRadius="0.015" borderColor="#ffcc00" borderWidth="0.002" hover-backgroundColor="#554400" cursor="pointer" textAlign="center">Timed - Clock per Turn</text>
+    <text name="btn-blitz" fontSize="0.035" color="#ff6644" backgroundColor="#331100" padding="0.02" borderRadius="0.015" borderColor="#ff6644" borderWidth="0.002" hover-backgroundColor="#552200" cursor="pointer" textAlign="center">Blitz - Total Time Limit</text>
+    <text name="btn-popout" fontSize="0.035" color="#ff66ff" backgroundColor="#330033" padding="0.02" borderRadius="0.015" borderColor="#ff66ff" borderWidth="0.002" hover-backgroundColor="#550055" cursor="pointer" textAlign="center">Pop Out - Remove Bottom Discs</text>
+    <text name="btn-five" fontSize="0.035" color="#66ff66" backgroundColor="#003300" padding="0.02" borderRadius="0.015" borderColor="#66ff66" borderWidth="0.002" hover-backgroundColor="#005500" cursor="pointer" textAlign="center">Five in a Row - 9x7 Grid</text>
+    <text name="btn-daily" fontSize="0.035" color="#ff8844" backgroundColor="#331500" padding="0.02" borderRadius="0.015" borderColor="#ff8844" borderWidth="0.002" hover-backgroundColor="#552200" cursor="pointer" textAlign="center">Daily Challenge</text>
+    <text name="btn-practice" fontSize="0.035" color="#88aaff" backgroundColor="#112244" padding="0.02" borderRadius="0.015" borderColor="#4488cc" borderWidth="0.002" hover-backgroundColor="#223355" cursor="pointer" textAlign="center">Practice - Undo Available</text>
+    <text name="btn-versus" fontSize="0.035" color="#aaddff" backgroundColor="#102030" padding="0.02" borderRadius="0.015" borderColor="#5599bb" borderWidth="0.002" hover-backgroundColor="#203040" cursor="pointer" textAlign="center">Versus - Local 2P</text>
+  </container>
+  <text name="btn-back" fontSize="0.035" color="#888888" backgroundColor="#222222" padding="0.02" borderRadius="0.015" borderColor="#666666" borderWidth="0.002" hover-backgroundColor="#444444" cursor="pointer" textAlign="center" marginTop="0.02">BACK</text>
+</container>

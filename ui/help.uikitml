@@ -1,0 +1,34 @@
+<container flexDirection="column" alignItems="center" gap="0.02" padding="0.05" backgroundColor="#000a18ee" borderRadius="0.04" borderColor="#88aaff" borderWidth="0.003" width="1.2" height="1.4">
+  <text fontSize="0.05" fontWeight="bold" color="#88aaff">HOW TO PLAY</text>
+  <container flexDirection="column" gap="0.015" width="1.0" marginTop="0.01" padding="0.03" backgroundColor="#001122" borderRadius="0.02">
+    <text fontSize="0.028" fontWeight="bold" color="#00ffff">GOAL</text>
+    <text fontSize="0.022" color="#cccccc">Connect 4 discs in a row - horizontally,</text>
+    <text fontSize="0.022" color="#cccccc">vertically, or diagonally - to win!</text>
+  </container>
+  <container flexDirection="column" gap="0.012" width="1.0" padding="0.03" backgroundColor="#001122" borderRadius="0.02">
+    <text fontSize="0.028" fontWeight="bold" color="#00ffff">BROWSER CONTROLS</text>
+    <text fontSize="0.022" color="#cccccc">Mouse: Hover to highlight column</text>
+    <text fontSize="0.022" color="#cccccc">Click: Drop disc in column</text>
+    <text fontSize="0.022" color="#cccccc">U: Undo (Practice mode)</text>
+    <text fontSize="0.022" color="#cccccc">ESC/P: Pause game</text>
+    <text fontSize="0.022" color="#cccccc">R: Rematch (game over)</text>
+  </container>
+  <container flexDirection="column" gap="0.012" width="1.0" padding="0.03" backgroundColor="#001122" borderRadius="0.02">
+    <text fontSize="0.028" fontWeight="bold" color="#00ffff">VR CONTROLS</text>
+    <text fontSize="0.022" color="#cccccc">Laser: Point at column</text>
+    <text fontSize="0.022" color="#cccccc">Trigger: Drop disc</text>
+    <text fontSize="0.022" color="#cccccc">B: Pause game</text>
+  </container>
+  <container flexDirection="column" gap="0.012" width="1.0" padding="0.03" backgroundColor="#001122" borderRadius="0.02">
+    <text fontSize="0.028" fontWeight="bold" color="#00ffff">GAME MODES</text>
+    <text fontSize="0.02" color="#cccccc">Classic: Standard Connect 4 vs AI</text>
+    <text fontSize="0.02" color="#cccccc">Timed: Limited time per turn</text>
+    <text fontSize="0.02" color="#cccccc">Blitz: Total game timer</text>
+    <text fontSize="0.02" color="#cccccc">Pop Out: Remove your bottom discs</text>
+    <text fontSize="0.02" color="#cccccc">Five in Row: 9x7 grid, connect 5</text>
+    <text fontSize="0.02" color="#cccccc">Daily: Seeded daily puzzle</text>
+    <text fontSize="0.02" color="#cccccc">Practice: Undo available</text>
+    <text fontSize="0.02" color="#cccccc">Versus: Local 2-player</text>
+  </container>
+  <text name="btn-back" fontSize="0.035" color="#888888" backgroundColor="#222222" padding="0.02" borderRadius="0.015" borderColor="#666666" borderWidth="0.002" hover-backgroundColor="#444444" cursor="pointer" textAlign="center">BACK</text>
+</container>

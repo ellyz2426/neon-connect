@@ -1,0 +1,18 @@
+<container flexDirection="column" alignItems="center" gap="0.02" padding="0.05" backgroundColor="#000a18ee" borderRadius="0.04" borderColor="#66ff66" borderWidth="0.003" width="1.0" height="1.0">
+  <text fontSize="0.05" fontWeight="bold" color="#66ff66">STATISTICS</text>
+  <container flexDirection="column" gap="0.015" width="0.8" marginTop="0.02" padding="0.03" backgroundColor="#001122" borderRadius="0.02">
+    <text name="stat-games" fontSize="0.025" color="#ffffff">Games Played: 0</text>
+    <text name="stat-wins" fontSize="0.025" color="#ffffff">Wins: 0</text>
+    <text name="stat-losses" fontSize="0.025" color="#ffffff">Losses: 0</text>
+    <text name="stat-draws" fontSize="0.025" color="#ffffff">Draws: 0</text>
+    <text name="stat-winrate" fontSize="0.025" color="#ffffff">Win Rate: 0%</text>
+    <text name="stat-streak" fontSize="0.025" color="#ffffff">Best Win Streak: 0</text>
+    <text name="stat-moves" fontSize="0.025" color="#ffffff">Total Moves: 0</text>
+    <text name="stat-fastest" fontSize="0.025" color="#ffffff">Fastest Win: --</text>
+    <text name="stat-perfect" fontSize="0.025" color="#ffffff">Perfect Games: 0</text>
+    <text name="stat-daily" fontSize="0.025" color="#ffffff">Daily Challenges: 0</text>
+    <text name="stat-level" fontSize="0.025" color="#ffcc00">Level: 1 - Novice</text>
+    <text name="stat-xp" fontSize="0.025" color="#ff8844">XP: 0 / 100</text>
+  </container>
+  <text name="btn-back" fontSize="0.035" color="#888888" backgroundColor="#222222" padding="0.02" borderRadius="0.015" borderColor="#666666" borderWidth="0.002" hover-backgroundColor="#444444" cursor="pointer" textAlign="center" marginTop="0.02">BACK</text>
+</container>

@@ -1,0 +1,10 @@
+<container flexDirection="column" alignItems="center" gap="0.04" padding="0.06" backgroundColor="#000a18ee" borderRadius="0.04" borderColor="#00ccff" borderWidth="0.003" width="1.0" height="0.8">
+  <text fontSize="0.06" fontWeight="bold" color="#00ffff">DIFFICULTY</text>
+  <text name="mode-label" fontSize="0.03" color="#88ccff">Classic Mode</text>
+  <container flexDirection="column" gap="0.025" width="0.8" marginTop="0.02">
+    <text name="btn-easy" fontSize="0.04" color="#66ff66" backgroundColor="#003300" padding="0.025" borderRadius="0.02" borderColor="#66ff66" borderWidth="0.002" hover-backgroundColor="#005500" cursor="pointer" textAlign="center">Easy</text>
+    <text name="btn-medium" fontSize="0.04" color="#ffcc00" backgroundColor="#333300" padding="0.025" borderRadius="0.02" borderColor="#ffcc00" borderWidth="0.002" hover-backgroundColor="#554400" cursor="pointer" textAlign="center">Medium</text>
+    <text name="btn-hard" fontSize="0.04" color="#ff4444" backgroundColor="#330000" padding="0.025" borderRadius="0.02" borderColor="#ff4444" borderWidth="0.002" hover-backgroundColor="#550000" cursor="pointer" textAlign="center">Hard</text>
+  </container>
+  <text name="btn-back" fontSize="0.035" color="#888888" backgroundColor="#222222" padding="0.02" borderRadius="0.015" borderColor="#666666" borderWidth="0.002" hover-backgroundColor="#444444" cursor="pointer" textAlign="center" marginTop="0.02">BACK</text>
+</container>

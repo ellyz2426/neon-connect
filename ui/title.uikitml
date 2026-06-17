@@ -1,0 +1,14 @@
+<container flexDirection="column" alignItems="center" gap="0.04" padding="0.06" backgroundColor="#000a18ee" borderRadius="0.04" borderColor="#00ccff" borderWidth="0.003" width="1.2" height="1.4">
+  <text name="title-text" fontSize="0.09" fontWeight="bold" color="#00ffff">NEON CONNECT</text>
+  <text name="subtitle" fontSize="0.03" color="#88ccff">Connect Four in the Holodeck</text>
+  <text name="level-display" fontSize="0.025" color="#ffcc00">Level 1 - Novice</text>
+  <container flexDirection="column" gap="0.025" marginTop="0.03" width="0.9">
+    <text name="btn-play" fontSize="0.045" fontWeight="bold" color="#00ffff" backgroundColor="#003355" padding="0.025" borderRadius="0.02" borderColor="#00ccff" borderWidth="0.002" hover-backgroundColor="#005577" cursor="pointer" textAlign="center">PLAY</text>
+    <text name="btn-scores" fontSize="0.035" color="#ffcc00" backgroundColor="#333300" padding="0.02" borderRadius="0.02" borderColor="#ffcc00" borderWidth="0.002" hover-backgroundColor="#554400" cursor="pointer" textAlign="center">LEADERBOARD</text>
+    <text name="btn-achievements" fontSize="0.035" color="#ff66ff" backgroundColor="#330033" padding="0.02" borderRadius="0.02" borderColor="#ff66ff" borderWidth="0.002" hover-backgroundColor="#550055" cursor="pointer" textAlign="center">ACHIEVEMENTS</text>
+    <text name="btn-stats" fontSize="0.035" color="#66ff66" backgroundColor="#003300" padding="0.02" borderRadius="0.02" borderColor="#66ff66" borderWidth="0.002" hover-backgroundColor="#005500" cursor="pointer" textAlign="center">STATISTICS</text>
+    <text name="btn-skins" fontSize="0.035" color="#ff8844" backgroundColor="#331100" padding="0.02" borderRadius="0.02" borderColor="#ff8844" borderWidth="0.002" hover-backgroundColor="#552200" cursor="pointer" textAlign="center">DISC SKINS</text>
+    <text name="btn-settings" fontSize="0.035" color="#aaaaaa" backgroundColor="#222222" padding="0.02" borderRadius="0.02" borderColor="#666666" borderWidth="0.002" hover-backgroundColor="#444444" cursor="pointer" textAlign="center">SETTINGS</text>
+    <text name="btn-help" fontSize="0.035" color="#88aaff" backgroundColor="#112244" padding="0.02" borderRadius="0.02" borderColor="#4488cc" borderWidth="0.002" hover-backgroundColor="#223355" cursor="pointer" textAlign="center">HOW TO PLAY</text>
+  </container>
+</container>

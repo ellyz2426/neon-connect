@@ -1,0 +1,39 @@
+<container flexDirection="column" alignItems="center" gap="0.03" padding="0.05" backgroundColor="#000a18ee" borderRadius="0.04" borderColor="#aaaaaa" borderWidth="0.003" width="1.0" height="1.1">
+  <text fontSize="0.05" fontWeight="bold" color="#ffffff">SETTINGS</text>
+  <container flexDirection="column" gap="0.02" width="0.8" marginTop="0.02">
+    <container flexDirection="row" justifyContent="space-between" alignItems="center">
+      <text fontSize="0.03" color="#aaaaaa">Master Volume</text>
+      <container flexDirection="row" gap="0.02" alignItems="center">
+        <text name="btn-master-down" fontSize="0.03" color="#00ccff" backgroundColor="#003355" padding="0.01" borderRadius="0.008" cursor="pointer">-</text>
+        <text name="master-vol" fontSize="0.025" color="#ffffff">100%</text>
+        <text name="btn-master-up" fontSize="0.03" color="#00ccff" backgroundColor="#003355" padding="0.01" borderRadius="0.008" cursor="pointer">+</text>
+      </container>
+    </container>
+    <container flexDirection="row" justifyContent="space-between" alignItems="center">
+      <text fontSize="0.03" color="#aaaaaa">SFX Volume</text>
+      <container flexDirection="row" gap="0.02" alignItems="center">
+        <text name="btn-sfx-down" fontSize="0.03" color="#00ccff" backgroundColor="#003355" padding="0.01" borderRadius="0.008" cursor="pointer">-</text>
+        <text name="sfx-vol" fontSize="0.025" color="#ffffff">100%</text>
+        <text name="btn-sfx-up" fontSize="0.03" color="#00ccff" backgroundColor="#003355" padding="0.01" borderRadius="0.008" cursor="pointer">+</text>
+      </container>
+    </container>
+    <container flexDirection="row" justifyContent="space-between" alignItems="center">
+      <text fontSize="0.03" color="#aaaaaa">Music Volume</text>
+      <container flexDirection="row" gap="0.02" alignItems="center">
+        <text name="btn-music-down" fontSize="0.03" color="#00ccff" backgroundColor="#003355" padding="0.01" borderRadius="0.008" cursor="pointer">-</text>
+        <text name="music-vol" fontSize="0.025" color="#ffffff">100%</text>
+        <text name="btn-music-up" fontSize="0.03" color="#00ccff" backgroundColor="#003355" padding="0.01" borderRadius="0.008" cursor="pointer">+</text>
+      </container>
+    </container>
+    <container flexDirection="row" justifyContent="space-between" alignItems="center" marginTop="0.02">
+      <text fontSize="0.03" color="#aaaaaa">Theme</text>
+      <container flexDirection="row" gap="0.02" alignItems="center">
+        <text name="btn-theme-prev" fontSize="0.03" color="#00ccff" backgroundColor="#003355" padding="0.01" borderRadius="0.008" cursor="pointer">&lt;</text>
+        <text name="theme-name" fontSize="0.025" color="#ffffff">Neon Holodeck</text>
+        <text name="btn-theme-next" fontSize="0.03" color="#00ccff" backgroundColor="#003355" padding="0.01" borderRadius="0.008" cursor="pointer">&gt;</text>
+      </container>
+    </container>
+    <text name="btn-reset" fontSize="0.03" color="#ff4444" backgroundColor="#330000" padding="0.015" borderRadius="0.01" borderColor="#ff4444" borderWidth="0.002" hover-backgroundColor="#550000" cursor="pointer" textAlign="center" marginTop="0.03">RESET ALL DATA</text>
+  </container>
+  <text name="btn-back" fontSize="0.035" color="#888888" backgroundColor="#222222" padding="0.02" borderRadius="0.015" borderColor="#666666" borderWidth="0.002" hover-backgroundColor="#444444" cursor="pointer" textAlign="center" marginTop="0.02">BACK</text>
+</container>
