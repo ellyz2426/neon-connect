@@ -155,6 +155,11 @@ const ACHIEVEMENTS: AchDef[] = [
   { id: 'play_1', name: 'Welcome', desc: 'Play your first game', check: () => save.gamesPlayed >= 1 },
   { id: 'play_100', name: 'Centurion', desc: 'Play 100 games', check: () => save.gamesPlayed >= 100 },
   { id: 'level_50', name: 'Transcendent', desc: 'Reach level 50', check: () => save.level >= 50 },
+  { id: 'skin_all', name: 'Collector', desc: 'Unlock all disc skins', check: () => Array.from({length: 10}, (_, i) => skinUnlocked(i)).every(u => u) },
+  { id: 'under_10', name: 'Efficiency', desc: 'Win in under 10 moves', check: () => save.wins >= 1 },
+  { id: 'modes_3', name: 'Explorer', desc: 'Play 3 different modes', check: () => Object.keys(save.modeStats).filter(m => (save.modeStats[m]?.played ?? 0) > 0).length >= 3 },
+  { id: 'xp_10000', name: 'XP Legend', desc: 'Earn 10000 total XP', check: () => save.xp >= 10000 },
+  { id: 'loss_0', name: 'Undefeated', desc: 'Win 10 games without a loss', check: () => save.currentStreak >= 10 && save.losses === 0 },
 ];
 
 // ─── Skins ──────────────────────────────────────────────────────────
@@ -167,6 +172,8 @@ const SKINS = [
   { name: 'Royal Gold', color: 0xffcc00, emissive: 0xaa8800, req: 'Perfect Game' },
   { name: 'Void Purple', color: 0xaa44ff, emissive: 0x7722aa, req: '80% Win Rate' },
   { name: 'Inferno', color: 0xff4422, emissive: 0xaa2211, req: 'All Modes' },
+  { name: 'Midnight', color: 0x2244aa, emissive: 0x112266, req: 'Level 15' },
+  { name: 'Holo Prism', color: 0xffffff, emissive: 0x88aaff, req: '25 Wins' },
 ];
 
 function skinUnlocked(i: number): boolean {
@@ -178,6 +185,8 @@ function skinUnlocked(i: number): boolean {
   if (i === 5) return save.perfectGames >= 1;
   if (i === 6) return save.gamesPlayed >= 20 && save.wins / save.gamesPlayed >= 0.8;
   if (i === 7) return ['classic','timed','blitz','popout','five','daily','practice','versus'].every(m => (save.modeStats[m]?.played ?? 0) > 0);
+  if (i === 8) return save.level >= 15;
+  if (i === 9) return save.wins >= 25;
   return false;
 }
 
@@ -196,11 +205,13 @@ const LEVEL_TITLES = ['Novice','Apprentice','Challenger','Competitor','Strategis
   'Tactician','Expert','Veteran','Champion','Elite','Master','Grandmaster',
   'Legend','Mythic','Transcendent'];
 function levelTitle(lvl: number): string { return LEVEL_TITLES[Math.min(Math.floor((lvl - 1) / 4), LEVEL_TITLES.length - 1)]; }
-function addXp(amount: number) {
+function addXp(amount: number): boolean {
+  let leveled = false;
   save.xp += amount;
   let needed = xpForLevel(save.level);
-  while (save.xp >= needed) { save.xp -= needed; save.level++; needed = xpForLevel(save.level); }
+  while (save.xp >= needed) { save.xp -= needed; save.level++; leveled = true; needed = xpForLevel(save.level); }
   writeSave();
+  return leveled;
 }
 
 // ─── Board Logic ────────────────────────────────────────────────────
@@ -408,6 +419,8 @@ class AudioManager {
   lose() { [400, 350, 300, 250].forEach((f, i) => setTimeout(() => this.tone(f, 0.3, 'sawtooth'), i * 150)); }
   draw() { this.tone(440, 0.3, 'triangle'); setTimeout(() => this.tone(440, 0.3, 'triangle'), 200); }
   click() { this.tone(1200, 0.05, 'square'); }
+  hover() { this.tone(2000, 0.03, 'sine'); }
+  levelUp() { [523, 659, 784, 988, 1175].forEach((f, i) => setTimeout(() => this.tone(f, 0.25, 'sine'), i * 100)); }
   achievement() { [784, 988, 1175, 1568].forEach((f, i) => setTimeout(() => this.tone(f, 0.2, 'sine'), i * 80)); }
   countdown() { this.tone(660, 0.12, 'square'); }
   invalid() { this.tone(200, 0.2, 'sawtooth'); }
@@ -792,6 +805,12 @@ class BoardRenderer {
   private originalBoardY = BOARD_Y;
   private discSpinTargets: { mesh: Mesh; speed: number; }[] = [];
   private gridPulseTime = 0;
+  private entryAnim = 0;
+  private entryAnimActive = false;
+  private lastMoveCol = -1;
+  private lastMoveRow = -1;
+  private lastMoveMesh: Mesh | null = null;
+  private lastMoveGlow: Mesh | null = null;
   private gridLines: Mesh[] = [];
   private gridLineMat!: MeshStandardMaterial;
 
@@ -848,6 +867,8 @@ class BoardRenderer {
   buildBoard(game: GameManager) {
     // Clear existing
     while (this.boardGroup.children.length > 0) this.boardGroup.remove(this.boardGroup.children[0]);
+    // Re-add ghost disc to board group
+    if (this.ghostDisc) this.boardGroup.add(this.ghostDisc);
     this.discMeshes = [];
     this.columnHighlights = [];
     this.columnHitboxes.forEach(h => { if (h.entity?.object3D) h.entity.object3D.visible = false; });
@@ -957,6 +978,28 @@ class BoardRenderer {
     this.shakeIntensity = intensity;
   }
 
+  startEntryAnimation() {
+    this.entryAnim = 0;
+    this.entryAnimActive = true;
+    this.boardGroup.scale.set(0.01, 0.01, 0.01);
+  }
+
+  markLastMove(col: number, row: number, game: GameManager) {
+    // Remove old last-move indicator
+    if (this.lastMoveGlow) {
+      this.boardGroup.remove(this.lastMoveGlow);
+      this.lastMoveGlow = null;
+    }
+    this.lastMoveCol = col;
+    this.lastMoveRow = row;
+    const w = game.cols * CELL;
+    const glowMat = new MeshStandardMaterial({ color: 0xffffff, emissive: new Color(0xffffff), emissiveIntensity: 1.2, transparent: true, opacity: 0.35 });
+    const glow = new Mesh(new TorusGeometry(DISC_R * 1.1, 0.008, 8, 24), glowMat);
+    glow.position.set(col * CELL - w / 2 + CELL / 2, row * CELL, 0.02);
+    this.boardGroup.add(glow);
+    this.lastMoveGlow = glow;
+  }
+
   getDiscWorldPos(col: number, row: number, game: GameManager): Vector3 {
     const w = game.cols * CELL;
     const x = col * CELL - w / 2 + CELL / 2;
@@ -1059,6 +1102,20 @@ class BoardRenderer {
     // Ghost disc pulse
     if (this.ghostDisc && this.ghostDisc.visible) {
       this.ghostMat.opacity = 0.2 + 0.08 * Math.sin(t * 2);
+    }
+    // Board entry animation
+    if (this.entryAnimActive) {
+      this.entryAnim += delta * 3;
+      const t = Math.min(this.entryAnim, 1);
+      // Elastic ease-out
+      const elastic = t === 1 ? 1 : -Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * (2 * Math.PI / 3)) + 1;
+      this.boardGroup.scale.set(elastic, elastic, elastic);
+      if (t >= 1) this.entryAnimActive = false;
+    }
+    // Last move indicator pulse
+    if (this.lastMoveGlow) {
+      const pulse = 0.25 + 0.15 * Math.sin(performance.now() / 300);
+      (this.lastMoveGlow.material as MeshStandardMaterial).opacity = pulse;
     }
     // Disc subtle rotation
     for (const spin of this.discSpinTargets) {
@@ -1244,7 +1301,7 @@ class UIManager {
         break;
 
       case 'skins':
-        for (let i = 1; i <= 8; i++) {
+        for (let i = 1; i <= 10; i++) {
           const idx = i - 1;
           btn(`skin-${i}`, () => {
             if (skinUnlocked(idx)) { save.equippedSkin = idx; writeSave(); ui.updateSkins(); }
@@ -1279,6 +1336,7 @@ class UIManager {
     this.game.hintCol = -1;
     this.game.startGame(this.game.mode, diff);
     this.renderer.buildBoard(this.game);
+    this.renderer.startEntryAnimation();
 
     // Rebuild existing discs (for daily challenge first move)
     for (let c = 0; c < this.game.cols; c++) {
@@ -1483,7 +1541,7 @@ class UIManager {
   updateSkins() {
     const doc = this.panels.get('skins')?.doc;
     if (!doc) return;
-    for (let i = 1; i <= 8; i++) {
+    for (let i = 1; i <= 10; i++) {
       const el = doc.getElementById(`skin-${i}`) as UIKit.Text | undefined;
       if (!el) continue;
       const skin = SKINS[i - 1];
@@ -1542,6 +1600,7 @@ class GameLoopSystem extends createSystem({
   private winLine!: WinLineRenderer;
   private hintActive = false;
   private hintFlashTimer = 0;
+  private prevHoveredCol = -1;
 
   setRefs(refs: { game: GameManager; boardRenderer: BoardRenderer; uiManager: UIManager; audio: AudioManager; particles: ParticleSystem; ambient: AmbientParticles; winLine: WinLineRenderer; }) {
     this.game = refs.game;
@@ -1642,6 +1701,7 @@ class GameLoopSystem extends createSystem({
               const pos = this.boardRenderer.getDiscWorldPos(col, result.row, this.game);
               this.particles.emitDropSplash(pos.x, pos.y, pos.z, new Color(0xff44ff));
               this.boardRenderer.triggerShake(0.008);
+              this.boardRenderer.markLastMove(col, result.row, this.game);
             }, dropTime * 1000);
           }
         }
@@ -1675,6 +1735,10 @@ class GameLoopSystem extends createSystem({
       }
     }
 
+    if (newHovered !== this.prevHoveredCol && newHovered >= 0) {
+      this.audio.hover();
+    }
+    this.prevHoveredCol = newHovered;
     this.hoveredCol = newHovered;
     if (newHovered >= 0) {
       this.boardRenderer.highlightColumn(newHovered, this.game.currentPlayer);
@@ -1799,6 +1863,7 @@ class GameLoopSystem extends createSystem({
       const clr = result.player === 1 ? new Color(SKINS[save.equippedSkin].color) : new Color(0xff44ff);
       this.particles.emitDropSplash(pos.x, pos.y, pos.z, clr);
       this.boardRenderer.triggerShake(0.01);
+      this.boardRenderer.markLastMove(col, result.row, this.game);
     }, dropTime * 1000);
 
     // Check if game ended (makeMove can set phase to gameover)
