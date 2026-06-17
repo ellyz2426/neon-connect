@@ -669,6 +669,90 @@ class TimerWarning {
   }
 }
 
+// ─── AI Thinking Indicator ──────────────────────────────────────────
+class AIThinkingIndicator {
+  private group: Group;
+  private dots: Mesh[] = [];
+  private active = false;
+
+  constructor(scene: { add: (o: any) => void }) {
+    this.group = new Group();
+    this.group.position.set(0, BOARD_Y + 0.9, BOARD_Z + 0.3);
+    const dotGeo = new SphereGeometry(0.02, 8, 8);
+    for (let i = 0; i < 3; i++) {
+      const mat = new MeshStandardMaterial({
+        color: 0xff44ff, emissive: new Color(0xff44ff),
+        emissiveIntensity: 1, transparent: true, opacity: 0,
+      });
+      const dot = new Mesh(dotGeo, mat);
+      dot.position.set((i - 1) * 0.06, 0, 0);
+      this.dots.push(dot);
+      this.group.add(dot);
+    }
+    scene.add(this.group);
+  }
+
+  setActive(active: boolean) {
+    this.active = active;
+    this.group.visible = active;
+  }
+
+  update(time: number) {
+    if (!this.active) return;
+    for (let i = 0; i < this.dots.length; i++) {
+      const phase = time * 4 + i * 1.2;
+      const bounce = Math.abs(Math.sin(phase)) * 0.04;
+      this.dots[i].position.y = bounce;
+      const mat = this.dots[i].material as MeshStandardMaterial;
+      mat.opacity = 0.5 + 0.5 * Math.abs(Math.sin(phase));
+      mat.emissiveIntensity = 0.5 + Math.abs(Math.sin(phase));
+    }
+  }
+}
+
+// ─── Holographic Environment Rings ──────────────────────────────────
+class HoloRings {
+  private rings: Mesh[] = [];
+  private ringMats: MeshStandardMaterial[] = [];
+
+  constructor(scene: { add: (o: any) => void }, themeColor: number) {
+    const ringParams = [
+      { r: 4, y: 3, size: 0.015 },
+      { r: 5.5, y: 2.2, size: 0.01 },
+      { r: 3, y: 4, size: 0.012 },
+    ];
+    for (const p of ringParams) {
+      const mat = new MeshStandardMaterial({
+        color: themeColor, emissive: new Color(themeColor),
+        emissiveIntensity: 0.4, transparent: true, opacity: 0.15,
+      });
+      const geo = new TorusGeometry(p.r, p.size, 16, 64);
+      const ring = new Mesh(geo, mat);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(0, p.y, BOARD_Z);
+      this.rings.push(ring);
+      this.ringMats.push(mat);
+      scene.add(ring);
+    }
+  }
+
+  update(time: number) {
+    for (let i = 0; i < this.rings.length; i++) {
+      this.rings[i].rotation.z = time * (0.05 + i * 0.02) * (i % 2 === 0 ? 1 : -1);
+      const mat = this.ringMats[i];
+      mat.opacity = 0.1 + 0.06 * Math.sin(time * 0.5 + i * 1.5);
+      mat.emissiveIntensity = 0.3 + 0.15 * Math.sin(time * 0.3 + i);
+    }
+  }
+
+  setTheme(color: number) {
+    for (const mat of this.ringMats) {
+      mat.color.set(color);
+      mat.emissive.set(color);
+    }
+  }
+}
+
 class GameManager {
   phase: GamePhase = 'menu';
   mode: GameMode = 'classic';
@@ -1963,10 +2047,12 @@ class GameLoopSystem extends createSystem({
   private columnArrows!: ColumnArrows;
   private reflection!: BoardReflection;
   private timerWarning!: TimerWarning;
+  private aiIndicator!: AIThinkingIndicator;
+  private holoRings!: HoloRings;
   private replayAutoTimer = 0;
   private musicStarted = false;
 
-  setRefs(refs: { game: GameManager; boardRenderer: BoardRenderer; uiManager: UIManager; audio: AudioManager; particles: ParticleSystem; ambient: AmbientParticles; winLine: WinLineRenderer; music: MusicSystem; columnArrows: ColumnArrows; reflection: BoardReflection; timerWarning: TimerWarning; }) {
+  setRefs(refs: { game: GameManager; boardRenderer: BoardRenderer; uiManager: UIManager; audio: AudioManager; particles: ParticleSystem; ambient: AmbientParticles; winLine: WinLineRenderer; music: MusicSystem; columnArrows: ColumnArrows; reflection: BoardReflection; timerWarning: TimerWarning; aiIndicator: AIThinkingIndicator; holoRings: HoloRings; }) {
     this.game = refs.game;
     this.boardRenderer = refs.boardRenderer;
     this.uiManager = refs.uiManager;
@@ -1978,6 +2064,8 @@ class GameLoopSystem extends createSystem({
     this.columnArrows = refs.columnArrows;
     this.reflection = refs.reflection;
     this.timerWarning = refs.timerWarning;
+    this.aiIndicator = refs.aiIndicator;
+    this.holoRings = refs.holoRings;
   }
 
   update(delta: number, time: number) {
@@ -2008,6 +2096,11 @@ class GameLoopSystem extends createSystem({
     this.ambient.update(time);
     this.winLine.update(delta);
     this.reflection.update(time, theme.grid);
+    this.aiIndicator.update(time);
+    this.holoRings.update(time);
+
+    // AI thinking indicator visibility
+    this.aiIndicator.setActive(this.game.aiThinking);
 
     // Background music update
     if (this.music) {
@@ -2354,6 +2447,8 @@ async function main() {
   const columnArrows = new ColumnArrows(world.scene, COLS_STD, new Vector3(0, BOARD_Y, BOARD_Z));
   const reflection = new BoardReflection(world.scene, BOARD_Y);
   const timerWarning = new TimerWarning(world.scene);
+  const aiIndicator = new AIThinkingIndicator(world.scene);
+  const holoRings = new HoloRings(world.scene, theme.grid);
 
   // Background music
   const music = new MusicSystem();
@@ -2370,7 +2465,7 @@ async function main() {
   uiManager.init(world, game, audio, boardRenderer, columnArrows);
 
   const loop = world.getSystem(GameLoopSystem)!;
-  loop.setRefs({ game, boardRenderer, uiManager, audio, particles, ambient, winLine, music, columnArrows, reflection, timerWarning });
+  loop.setRefs({ game, boardRenderer, uiManager, audio, particles, ambient, winLine, music, columnArrows, reflection, timerWarning, aiIndicator, holoRings });
 }
 
 main().catch(console.error);
