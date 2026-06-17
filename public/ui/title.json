@@ -73,6 +73,27 @@
             "sourceTag": "text",
             "type": "custom",
             "children": [
+              "TOURNAMENT"
+            ],
+            "properties": {
+              "name": "btn-tournament",
+              "fontsize": "0.035",
+              "color": "#ffaa00",
+              "backgroundcolor": "#332200",
+              "padding": "0.02",
+              "borderradius": "0.02",
+              "bordercolor": "#ffaa00",
+              "borderwidth": "0.002",
+              "hoverBackgroundcolor": "#553300",
+              "cursor": "pointer",
+              "textalign": "center"
+            },
+            "dataUid": "uid-7"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
               "LEADERBOARD"
             ],
             "properties": {
@@ -88,7 +109,7 @@
               "cursor": "pointer",
               "textalign": "center"
             },
-            "dataUid": "uid-7"
+            "dataUid": "uid-8"
           },
           {
             "sourceTag": "text",
@@ -109,7 +130,7 @@
               "cursor": "pointer",
               "textalign": "center"
             },
-            "dataUid": "uid-8"
+            "dataUid": "uid-9"
           },
           {
             "sourceTag": "text",
@@ -130,7 +151,7 @@
               "cursor": "pointer",
               "textalign": "center"
             },
-            "dataUid": "uid-9"
+            "dataUid": "uid-10"
           },
           {
             "sourceTag": "text",
@@ -151,7 +172,7 @@
               "cursor": "pointer",
               "textalign": "center"
             },
-            "dataUid": "uid-10"
+            "dataUid": "uid-11"
           },
           {
             "sourceTag": "text",
@@ -172,7 +193,7 @@
               "cursor": "pointer",
               "textalign": "center"
             },
-            "dataUid": "uid-11"
+            "dataUid": "uid-12"
           },
           {
             "sourceTag": "text",
@@ -193,13 +214,13 @@
               "cursor": "pointer",
               "textalign": "center"
             },
-            "dataUid": "uid-12"
+            "dataUid": "uid-13"
           }
         ],
         "properties": {
           "flexdirection": "column",
-          "gap": "0.025",
-          "margintop": "0.03",
+          "gap": "0.02",
+          "margintop": "0.025",
           "width": "0.9"
         },
         "dataUid": "uid-5"
@@ -208,14 +229,14 @@
     "properties": {
       "flexdirection": "column",
       "alignitems": "center",
-      "gap": "0.04",
+      "gap": "0.035",
       "padding": "0.06",
       "backgroundcolor": "#000a18ee",
       "borderradius": "0.04",
       "bordercolor": "#00ccff",
       "borderwidth": "0.003",
       "width": "1.2",
-      "height": "1.4"
+      "height": "1.55"
     },
     "dataUid": "uid-1"
   },
@@ -227,7 +248,7 @@
         "column": 0
       },
       "end": {
-        "line": 13,
+        "line": 14,
         "column": 12
       }
     },
@@ -267,7 +288,7 @@
         "column": 2
       },
       "end": {
-        "line": 12,
+        "line": 13,
         "column": 14
       }
     },
@@ -288,7 +309,7 @@
       },
       "end": {
         "line": 6,
-        "column": 250
+        "column": 253
       }
     },
     "uid-8": {
@@ -298,7 +319,7 @@
       },
       "end": {
         "line": 7,
-        "column": 257
+        "column": 250
       }
     },
     "uid-9": {
@@ -308,7 +329,7 @@
       },
       "end": {
         "line": 8,
-        "column": 248
+        "column": 257
       }
     },
     "uid-10": {
@@ -328,7 +349,7 @@
       },
       "end": {
         "line": 10,
-        "column": 249
+        "column": 248
       }
     },
     "uid-12": {
@@ -338,6 +359,16 @@
       },
       "end": {
         "line": 11,
+        "column": 249
+      }
+    },
+    "uid-13": {
+      "start": {
+        "line": 12,
+        "column": 4
+      },
+      "end": {
+        "line": 12,
         "column": 248
       }
     }

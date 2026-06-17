@@ -1,0 +1,27 @@
+<panel width="560" height="360" background-color="#000a18cc" border-radius="18" flex-direction="column" padding="16" gap="10" align-items="center">
+  <text id="tournament-title" font-size="26" color="#00ffff" font-weight="bold">TOURNAMENT</text>
+  <text id="tournament-format" font-size="16" color="#88ccff">Best of 5</text>
+  <panel width="480" height="3" background-color="#00ccff44" margin="4"></panel>
+  <panel flex-direction="row" gap="40" align-items="center" justify-content="center" width="480">
+    <panel flex-direction="column" align-items="center" gap="4">
+      <text id="t-p1-label" font-size="14" color="#00ffff">YOU</text>
+      <text id="t-p1-score" font-size="48" color="#00ffff" font-weight="bold">0</text>
+    </panel>
+    <text font-size="28" color="#446688">vs</text>
+    <panel flex-direction="column" align-items="center" gap="4">
+      <text id="t-p2-label" font-size="14" color="#ff44ff">CPU</text>
+      <text id="t-p2-score" font-size="48" color="#ff44ff" font-weight="bold">0</text>
+    </panel>
+  </panel>
+  <panel width="480" height="3" background-color="#00ccff44" margin="4"></panel>
+  <text id="tournament-round" font-size="16" color="#aaaaaa">Round 1</text>
+  <text id="tournament-status" font-size="18" color="#ffcc00">In Progress</text>
+  <panel flex-direction="row" gap="20" margin="8">
+    <panel id="btn-t-continue" width="180" height="44" background-color="#00ccff33" border-radius="8" align-items="center" justify-content="center">
+      <text font-size="16" color="#00ffff">Next Round</text>
+    </panel>
+    <panel id="btn-t-quit" width="180" height="44" background-color="#ff444433" border-radius="8" align-items="center" justify-content="center">
+      <text font-size="16" color="#ff6666">Quit Tournament</text>
+    </panel>
+  </panel>
+</panel>

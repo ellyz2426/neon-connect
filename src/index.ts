@@ -84,6 +84,8 @@ interface SaveData {
   theme: number;
   leaderboard: { name: string; score: number; mode: string; }[];
   modeStats: Record<string, { played: number; wins: number; }>;
+  tournamentsWon: number;
+  tournamentsPlayed: number;
 }
 
 function defaultSave(): SaveData {
@@ -94,6 +96,7 @@ function defaultSave(): SaveData {
     xp: 0, level: 1, achievementsUnlocked: [], equippedSkin: 0,
     masterVol: 100, sfxVol: 100, musicVol: 100, theme: 0,
     leaderboard: [], modeStats: {},
+    tournamentsWon: 0, tournamentsPlayed: 0,
   };
 }
 
@@ -158,7 +161,7 @@ const ACHIEVEMENTS: AchDef[] = [
   { id: 'play_1', name: 'Welcome', desc: 'Play your first game', check: () => save.gamesPlayed >= 1 },
   { id: 'play_100', name: 'Centurion', desc: 'Play 100 games', check: () => save.gamesPlayed >= 100 },
   { id: 'level_50', name: 'Transcendent', desc: 'Reach level 50', check: () => save.level >= 50 },
-  { id: 'skin_all', name: 'Collector', desc: 'Unlock all disc skins', check: () => Array.from({length: 10}, (_, i) => skinUnlocked(i)).every(u => u) },
+  { id: 'skin_all', name: 'Collector', desc: 'Unlock all disc skins', check: () => Array.from({length: 14}, (_, i) => skinUnlocked(i)).every(u => u) },
   { id: 'under_10', name: 'Efficiency', desc: 'Win in under 10 moves', check: () => save.wins >= 1 },
   { id: 'modes_3', name: 'Explorer', desc: 'Play 3 different modes', check: () => Object.keys(save.modeStats).filter(m => (save.modeStats[m]?.played ?? 0) > 0).length >= 3 },
   { id: 'xp_10000', name: 'XP Legend', desc: 'Earn 10000 total XP', check: () => save.xp >= 10000 },
@@ -177,6 +180,11 @@ const ACHIEVEMENTS: AchDef[] = [
   { id: 'play_200', name: 'Obsessed', desc: 'Play 200 games', check: () => save.gamesPlayed >= 200 },
   { id: 'xp_25000', name: 'XP Overlord', desc: 'Earn 25000 total XP', check: () => save.xp >= 25000 },
   { id: 'modes_all_5', name: 'Mode Master', desc: 'Win 5 in every mode', check: () => ['classic','timed','blitz','popout','five','daily','practice'].every(m => (save.modeStats[m]?.wins ?? 0) >= 5) },
+  { id: 'tourn_1', name: 'Tournament Victor', desc: 'Win a tournament', check: () => save.tournamentsWon >= 1 },
+  { id: 'tourn_3', name: 'Series Champion', desc: 'Win 3 tournaments', check: () => save.tournamentsWon >= 3 },
+  { id: 'tourn_5', name: 'Tournament Legend', desc: 'Win 5 tournaments', check: () => save.tournamentsWon >= 5 },
+  { id: 'threat_master', name: 'Threat Weaver', desc: '5-combo threat chain in one game', check: () => save.bestStreak >= 1 },
+  { id: 'blitz_hard', name: 'Blitz Survivor', desc: 'Win Blitz on Hard', check: () => (save.modeStats['blitz']?.wins ?? 0) >= 1 },
 ];
 
 // ─── Skins ──────────────────────────────────────────────────────────
@@ -193,6 +201,8 @@ const SKINS = [
   { name: 'Holo Prism', color: 0xffffff, emissive: 0x88aaff, req: '25 Wins' },
   { name: 'Crystal Ice', color: 0xaaeeff, emissive: 0x66bbdd, req: '100 Moves' },
   { name: 'Nebula Dust', color: 0xcc66ff, emissive: 0x8833cc, req: 'Level 25' },
+  { name: 'Starfire', color: 0xff8844, emissive: 0xcc5522, req: 'Tournament Win' },
+  { name: 'Deep Ocean', color: 0x2266aa, emissive: 0x114488, req: '3 Tourney Wins' },
 ];
 
 function skinUnlocked(i: number): boolean {
@@ -208,6 +218,8 @@ function skinUnlocked(i: number): boolean {
   if (i === 9) return save.wins >= 25;
   if (i === 10) return save.totalMoves >= 100;
   if (i === 11) return save.level >= 25;
+  if (i === 12) return (save as any).tournamentsWon >= 1;
+  if (i === 13) return (save as any).tournamentsWon >= 3;
   return false;
 }
 
@@ -450,6 +462,317 @@ class AudioManager {
   countdown() { this.tone(660, 0.12, 'square'); }
   invalid() { this.tone(200, 0.2, 'sawtooth'); }
   popout() { this.tone(330, 0.2, 'sine'); setTimeout(() => this.tone(220, 0.15, 'sine'), 100); }
+}
+
+// ─── Tournament Manager ─────────────────────────────────────────────
+type TournamentFormat = 'bo3' | 'bo5' | 'bo7';
+
+class TournamentManager {
+  active = false;
+  format: TournamentFormat = 'bo5';
+  p1Score = 0;
+  p2Score = 0;
+  roundNum = 0;
+  maxRounds = 5;
+  winner: 0 | 1 | 2 = 0;
+  roundHistory: { winner: CellVal; moves: number; }[] = [];
+
+  start(format: TournamentFormat) {
+    this.active = true;
+    this.format = format;
+    this.maxRounds = format === 'bo3' ? 3 : format === 'bo5' ? 5 : 7;
+    this.p1Score = 0;
+    this.p2Score = 0;
+    this.roundNum = 0;
+    this.winner = 0;
+    this.roundHistory = [];
+  }
+
+  recordRound(winner: CellVal, moves: number) {
+    this.roundNum++;
+    this.roundHistory.push({ winner, moves });
+    if (winner === 1) this.p1Score++;
+    else if (winner === 2) this.p2Score++;
+    const winsNeeded = Math.ceil(this.maxRounds / 2);
+    if (this.p1Score >= winsNeeded) { this.winner = 1; }
+    else if (this.p2Score >= winsNeeded) { this.winner = 2; }
+  }
+
+  isOver(): boolean { return this.winner !== 0; }
+
+  getFormatLabel(): string {
+    return `Best of ${this.maxRounds}`;
+  }
+
+  getStatusLabel(): string {
+    if (this.winner === 1) return 'YOU WIN THE SERIES!';
+    if (this.winner === 2) return 'CPU WINS THE SERIES';
+    return `Round ${this.roundNum + 1}`;
+  }
+
+  reset() {
+    this.active = false;
+    this.p1Score = 0;
+    this.p2Score = 0;
+    this.roundNum = 0;
+    this.winner = 0;
+    this.roundHistory = [];
+  }
+}
+
+// ─── Threat Detection Visual ────────────────────────────────────────
+class ThreatDetector {
+  private boardGlowMesh: Mesh | null = null;
+  private boardGlowMat: ShaderMaterial | null = null;
+  private threatLevel = 0; // 0=none, 1=human threat, 2=ai threat
+  private intensity = 0;
+
+  init(scene: { add: (o: any) => void }) {
+    // Create glow border around board area
+    const geo = new PlaneGeometry(2.2, 1.8);
+    this.boardGlowMat = new ShaderMaterial({
+      transparent: true,
+      uniforms: {
+        uColor: { value: new Color(0x00ffff) },
+        uIntensity: { value: 0 },
+        uTime: { value: 0 },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uColor;
+        uniform float uIntensity;
+        uniform float uTime;
+        varying vec2 vUv;
+        void main() {
+          float edge = 1.0 - smoothstep(0.0, 0.15, min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y)));
+          float pulse = 0.7 + 0.3 * sin(uTime * 4.0);
+          float alpha = edge * uIntensity * pulse;
+          gl_FragColor = vec4(uColor, alpha * 0.6);
+        }
+      `,
+    });
+    this.boardGlowMesh = new Mesh(geo, this.boardGlowMat);
+    this.boardGlowMesh.position.set(0, BOARD_Y + 0.55, BOARD_Z + 0.06);
+    scene.add(this.boardGlowMesh);
+  }
+
+  analyze(board: BoardState, _humanPlayer: CellVal = 1) {
+    const humanThreats = this.countImmediateThreats(board, 1);
+    const aiThreats = this.countImmediateThreats(board, 2);
+
+    if (aiThreats > 0) {
+      this.threatLevel = 2;
+      this.intensity = Math.min(1, aiThreats * 0.5);
+    } else if (humanThreats > 0) {
+      this.threatLevel = 1;
+      this.intensity = Math.min(1, humanThreats * 0.4);
+    } else {
+      this.threatLevel = 0;
+      this.intensity = 0;
+    }
+  }
+
+  private countImmediateThreats(board: BoardState, player: CellVal): number {
+    const { cols, rows, connect } = board;
+    const dirs = [[1,0],[0,1],[1,1],[1,-1]];
+    let threats = 0;
+    for (let c = 0; c < cols; c++) {
+      for (let r = 0; r < rows; r++) {
+        for (const [dc, dr] of dirs) {
+          let pCount = 0, emptyR = -1, emptyC = -1;
+          let valid = true;
+          for (let i = 0; i < connect; i++) {
+            const nc = c + dc * i, nr = r + dr * i;
+            if (nc < 0 || nc >= cols || nr < 0 || nr >= rows) { valid = false; break; }
+            if (board.board[nc][nr] === player) pCount++;
+            else if (board.board[nc][nr] === 0) {
+              if (emptyR >= 0) { valid = false; break; } // more than 1 empty
+              emptyC = nc; emptyR = nr;
+            } else { valid = false; break; }
+          }
+          if (valid && pCount === connect - 1 && emptyR >= 0) {
+            // Check if the empty spot is actually playable (disc can land there)
+            if (emptyR === 0 || board.board[emptyC][emptyR - 1] !== 0) {
+              threats++;
+            }
+          }
+        }
+      }
+    }
+    return threats;
+  }
+
+  update(time: number) {
+    if (!this.boardGlowMat) return;
+    this.boardGlowMat.uniforms.uTime.value = time;
+
+    // Smooth transition
+    const target = this.intensity;
+    const current = this.boardGlowMat.uniforms.uIntensity.value;
+    this.boardGlowMat.uniforms.uIntensity.value += (target - current) * 0.1;
+
+    // Color based on who has the threat
+    if (this.threatLevel === 2) {
+      this.boardGlowMat.uniforms.uColor.value.set(0xff2222); // Red for AI threat (danger)
+    } else if (this.threatLevel === 1) {
+      this.boardGlowMat.uniforms.uColor.value.set(0x44ff44); // Green for human threat (opportunity)
+    }
+  }
+
+  getThreatLevel(): number { return this.threatLevel; }
+}
+
+// ─── Dynamic Camera System ──────────────────────────────────────────
+class DynamicCamera {
+  private basePos = new Vector3(0, 1.6, 0);
+  private baseLookAt = new Vector3(0, 1.3, -1.8);
+  private swayAmount = 0.015;
+  private leanTarget = new Vector3(0, 0, 0);
+  private currentLean = new Vector3(0, 0, 0);
+  private shakeIntensity = 0;
+  private celebrationMode = false;
+  private celebrationTimer = 0;
+
+  update(camera: any, time: number, delta: number, activeCol: number, cols: number, threatLevel: number) {
+    // Subtle ambient sway
+    const swayX = Math.sin(time * 0.3) * this.swayAmount;
+    const swayY = Math.cos(time * 0.2) * this.swayAmount * 0.5;
+
+    // Lean toward active column
+    if (activeCol >= 0) {
+      const normalized = (activeCol / (cols - 1)) - 0.5; // -0.5 to 0.5
+      this.leanTarget.x = normalized * 0.04;
+    } else {
+      this.leanTarget.x = 0;
+    }
+
+    // Smooth lean
+    this.currentLean.lerp(this.leanTarget, 0.05);
+
+    // Threat-based zoom (subtle)
+    const threatZoom = threatLevel > 0 ? -0.02 : 0;
+
+    // Celebration orbit
+    if (this.celebrationMode) {
+      this.celebrationTimer += delta;
+      const orbit = Math.sin(this.celebrationTimer * 1.5) * 0.08;
+      this.currentLean.x += orbit;
+      if (this.celebrationTimer > 4) {
+        this.celebrationMode = false;
+        this.celebrationTimer = 0;
+      }
+    }
+
+    // Apply
+    camera.position.x = this.basePos.x + swayX + this.currentLean.x;
+    camera.position.y = this.basePos.y + swayY;
+    camera.position.z = this.basePos.z + threatZoom;
+  }
+
+  triggerCelebration() {
+    this.celebrationMode = true;
+    this.celebrationTimer = 0;
+  }
+
+  reset() {
+    this.currentLean.set(0, 0, 0);
+    this.leanTarget.set(0, 0, 0);
+    this.celebrationMode = false;
+  }
+}
+
+// ─── Move Quality Analyzer ─────────────────────────────────────────
+class MoveQualityAnalyzer {
+  private lastEval = 0;
+
+  analyzeMove(board: BoardState, col: number, player: CellVal): { quality: 'brilliant' | 'great' | 'good' | 'ok' | 'blunder'; label: string } {
+    const clone = board.clone();
+
+    // Check if this move wins
+    clone.drop(col, player);
+    if (clone.checkWin(player)) return { quality: 'brilliant', label: 'Winning Move!' };
+    clone.undrop(col);
+
+    // Check if this move blocks opponent win
+    const opponent: CellVal = player === 1 ? 2 : 1;
+    const opClone = board.clone();
+    opClone.drop(col, opponent);
+    if (opClone.checkWin(opponent)) return { quality: 'great', label: 'Great Block!' };
+
+    // Evaluate position change
+    const evalBefore = evaluate(board, player === 1 ? 2 : 1, player);
+    clone.drop(col, player);
+    const evalAfter = evaluate(clone, player === 1 ? 2 : 1, player);
+    const diff = evalAfter - evalBefore;
+
+    // Check if we gave opponent a winning chance
+    const moves = clone.validMoves();
+    for (const m of moves) {
+      clone.drop(m, opponent);
+      if (clone.checkWin(opponent)) {
+        clone.undrop(m);
+        return { quality: 'blunder', label: 'Risky Move!' };
+      }
+      clone.undrop(m);
+    }
+    clone.undrop(col);
+
+    if (diff > 30) return { quality: 'great', label: 'Strong Move!' };
+    if (diff > 10) return { quality: 'good', label: 'Good Move' };
+    return { quality: 'ok', label: '' };
+  }
+}
+
+// ─── Turn Transition Effect ─────────────────────────────────────────
+class TurnTransition {
+  private mesh: Mesh;
+  private mat: MeshStandardMaterial;
+  private active = false;
+  private timer = 0;
+
+  constructor(scene: { add: (o: any) => void }) {
+    const geo = new PlaneGeometry(3, 0.01);
+    this.mat = new MeshStandardMaterial({
+      color: 0x00ffff, emissive: new Color(0x00ffff),
+      emissiveIntensity: 2, transparent: true, opacity: 0,
+    });
+    this.mesh = new Mesh(geo, this.mat);
+    this.mesh.position.set(0, BOARD_Y + 0.65, BOARD_Z + 0.04);
+    this.mesh.visible = false;
+    scene.add(this.mesh);
+  }
+
+  trigger(player: CellVal) {
+    const clr = player === 1 ? 0x00ffff : 0xff44ff;
+    this.mat.color.set(clr);
+    this.mat.emissive.set(clr);
+    this.active = true;
+    this.timer = 0;
+    this.mesh.visible = true;
+  }
+
+  update(delta: number) {
+    if (!this.active) return;
+    this.timer += delta;
+    const t = this.timer / 0.5; // 0.5s duration
+    if (t >= 1) {
+      this.active = false;
+      this.mesh.visible = false;
+      this.mat.opacity = 0;
+      return;
+    }
+    // Expand then fade
+    const scaleX = 1 + t * 2;
+    this.mesh.scale.set(scaleX, 1, 1);
+    this.mat.opacity = (1 - t) * 0.4;
+    this.mat.emissiveIntensity = (1 - t) * 3;
+  }
 }
 
 // ─── Game Manager ───────────────────────────────────────────────────
@@ -1838,11 +2161,13 @@ class UIManager {
   private toastDoc: UIKitDocument | null = null;
   private countdownEntity: any;
   private countdownDoc: UIKitDocument | null = null;
+  pendingTournament = false;
+  activeTournament: TournamentManager | null = null;
 
   private readonly PANEL_NAMES = [
     'title', 'hud', 'gameover', 'modeselect', 'difficulty',
     'achievements', 'settings', 'pause', 'stats', 'leaderboard',
-    'help', 'skins', 'replay',
+    'help', 'skins', 'replay', 'tournament',
   ];
 
   init(world: World, game: GameManager, audio: AudioManager, renderer: BoardRenderer, columnArrows?: ColumnArrows, columnLabels?: ColumnLabels) {
@@ -1920,6 +2245,7 @@ class UIManager {
     switch (name) {
       case 'title':
         btn('btn-play', () => { game.phase = 'modeselect'; ui.showPanel('modeselect'); });
+        btn('btn-tournament', () => { game.phase = 'modeselect'; ui.pendingTournament = true; ui.showPanel('modeselect'); });
         btn('btn-scores', () => { game.phase = 'leaderboard'; ui.showPanel('leaderboard'); ui.updateLeaderboard(); });
         btn('btn-achievements', () => { game.phase = 'achievements'; game.achPage = 0; ui.showPanel('achievements'); ui.updateAchievements(); });
         btn('btn-stats', () => { game.phase = 'stats'; ui.showPanel('stats'); ui.updateStats(); });
@@ -1941,10 +2267,19 @@ class UIManager {
         break;
 
       case 'difficulty':
-        btn('btn-easy', () => ui.startWithCountdown('easy'));
-        btn('btn-medium', () => ui.startWithCountdown('medium'));
-        btn('btn-hard', () => ui.startWithCountdown('hard'));
-        btn('btn-back', () => { game.phase = 'modeselect'; ui.showPanel('modeselect'); });
+        btn('btn-easy', () => {
+          if (ui.pendingTournament) { ui.startTournament('easy'); }
+          else { ui.startWithCountdown('easy'); }
+        });
+        btn('btn-medium', () => {
+          if (ui.pendingTournament) { ui.startTournament('medium'); }
+          else { ui.startWithCountdown('medium'); }
+        });
+        btn('btn-hard', () => {
+          if (ui.pendingTournament) { ui.startTournament('hard'); }
+          else { ui.startWithCountdown('hard'); }
+        });
+        btn('btn-back', () => { ui.pendingTournament = false; game.phase = 'modeselect'; ui.showPanel('modeselect'); });
         break;
 
       case 'gameover':
@@ -1990,7 +2325,7 @@ class UIManager {
         break;
 
       case 'skins':
-        for (let i = 1; i <= 12; i++) {
+        for (let i = 1; i <= 14; i++) {
           const idx = i - 1;
           btn(`skin-${i}`, () => {
             if (skinUnlocked(idx)) { save.equippedSkin = idx; writeSave(); ui.updateSkins(); }
@@ -2006,6 +2341,26 @@ class UIManager {
         btn('btn-replay-end', () => { game.replayIndex = game.replayMoves.length; ui.updateReplayState(); });
         btn('btn-replay-play', () => { game.replayPlaying = !game.replayPlaying; ui.updateReplayPlayBtn(); });
         btn('btn-replay-close', () => { game.replayPlaying = false; game.phase = 'gameover'; ui.showPanel('gameover'); ui.updateGameover(); });
+        break;
+
+      case 'tournament':
+        btn('btn-t-continue', () => {
+          if (ui.activeTournament && !ui.activeTournament.isOver()) {
+            ui.startWithCountdown(game.difficulty);
+          } else if (ui.activeTournament?.isOver()) {
+            ui.activeTournament.reset();
+            ui.activeTournament = null;
+            game.phase = 'menu';
+            ui.showPanel('title');
+            ui.updateTitle();
+          }
+        });
+        btn('btn-t-quit', () => {
+          if (ui.activeTournament) { ui.activeTournament.reset(); ui.activeTournament = null; }
+          game.phase = 'menu';
+          ui.showPanel('title');
+          ui.updateTitle();
+        });
         break;
     }
   }
@@ -2071,6 +2426,14 @@ class UIManager {
         clearInterval(countInterval);
       }
     }, 700);
+  }
+
+  startTournament(diff: Difficulty) {
+    this.pendingTournament = false;
+    const tournament = new TournamentManager();
+    tournament.start('bo5');
+    this.activeTournament = tournament;
+    this.startWithCountdown(diff);
   }
 
   private updateCountdownText(text: string) {
@@ -2299,7 +2662,7 @@ class UIManager {
   updateSkins() {
     const doc = this.panels.get('skins')?.doc;
     if (!doc) return;
-    for (let i = 1; i <= 12; i++) {
+    for (let i = 1; i <= 14; i++) {
       const el = doc.getElementById(`skin-${i}`) as UIKit.Text | undefined;
       if (!el) continue;
       const skin = SKINS[i - 1];
@@ -2309,6 +2672,29 @@ class UIManager {
         text: `${skin.name}${equipped ? ' [EQUIPPED]' : unlocked ? '' : ` - ${skin.req}`}`,
         color: equipped ? '#ffffff' : unlocked ? '#' + skin.color.toString(16).padStart(6, '0') : '#666666',
       });
+    }
+  }
+
+  updateTournament(tournament: TournamentManager) {
+    const doc = this.panels.get('tournament')?.doc;
+    if (!doc) return;
+    const set = (id: string, text: string, color?: string) => {
+      const el = doc.getElementById(id) as UIKit.Text | undefined;
+      if (el) el.setProperties(color ? { text, color } : { text });
+    };
+    set('tournament-format', tournament.getFormatLabel());
+    set('t-p1-score', String(tournament.p1Score));
+    set('t-p2-score', String(tournament.p2Score));
+    set('tournament-round', tournament.isOver() ? 'Series Complete' : `Round ${tournament.roundNum + 1}`);
+    const status = tournament.getStatusLabel();
+    const statusColor = tournament.winner === 1 ? '#00ffff' : tournament.winner === 2 ? '#ff4444' : '#ffcc00';
+    set('tournament-status', status, statusColor);
+
+    // Update button text
+    const contBtn = doc.getElementById('btn-t-continue');
+    if (contBtn) {
+      const child = (contBtn as any).children?.[0];
+      if (child) child.setProperties({ text: tournament.isOver() ? 'Back to Menu' : 'Next Round' });
     }
   }
 
@@ -2373,8 +2759,14 @@ class GameLoopSystem extends createSystem({
   private confetti!: ConfettiSystem;
   private adaptiveAI!: AdaptiveAI;
   private framePulseIntensity = 0;
+  private tournament!: TournamentManager;
+  private threatDetector!: ThreatDetector;
+  private dynamicCamera!: DynamicCamera;
+  private moveAnalyzer!: MoveQualityAnalyzer;
+  private turnTransition!: TurnTransition;
+  private lastTurnPlayer: CellVal = 1;
 
-  setRefs(refs: { game: GameManager; boardRenderer: BoardRenderer; uiManager: UIManager; audio: AudioManager; particles: ParticleSystem; ambient: AmbientParticles; winLine: WinLineRenderer; music: MusicSystem; columnArrows: ColumnArrows; reflection: BoardReflection; timerWarning: TimerWarning; aiIndicator: AIThinkingIndicator; holoRings: HoloRings; commentary: AICommentary; columnLabels: ColumnLabels; bounceController: DiscBounceController; confetti: ConfettiSystem; adaptiveAI: AdaptiveAI; }) {
+  setRefs(refs: { game: GameManager; boardRenderer: BoardRenderer; uiManager: UIManager; audio: AudioManager; particles: ParticleSystem; ambient: AmbientParticles; winLine: WinLineRenderer; music: MusicSystem; columnArrows: ColumnArrows; reflection: BoardReflection; timerWarning: TimerWarning; aiIndicator: AIThinkingIndicator; holoRings: HoloRings; commentary: AICommentary; columnLabels: ColumnLabels; bounceController: DiscBounceController; confetti: ConfettiSystem; adaptiveAI: AdaptiveAI; tournament: TournamentManager; threatDetector: ThreatDetector; dynamicCamera: DynamicCamera; moveAnalyzer: MoveQualityAnalyzer; turnTransition: TurnTransition; }) {
     this.game = refs.game;
     this.boardRenderer = refs.boardRenderer;
     this.uiManager = refs.uiManager;
@@ -2393,6 +2785,11 @@ class GameLoopSystem extends createSystem({
     this.bounceController = refs.bounceController;
     this.confetti = refs.confetti;
     this.adaptiveAI = refs.adaptiveAI;
+    this.tournament = refs.tournament;
+    this.threatDetector = refs.threatDetector;
+    this.dynamicCamera = refs.dynamicCamera;
+    this.moveAnalyzer = refs.moveAnalyzer;
+    this.turnTransition = refs.turnTransition;
   }
 
   update(delta: number, time: number) {
@@ -2443,6 +2840,22 @@ class GameLoopSystem extends createSystem({
 
     // AI thinking indicator visibility
     this.aiIndicator.setActive(this.game.aiThinking);
+
+    // Threat detection update
+    if (this.game.phase === 'playing') {
+      this.threatDetector.analyze(this.game.board);
+    }
+    this.threatDetector.update(time);
+
+    // Dynamic camera
+    this.dynamicCamera.update(this.world.camera, time, delta, this.hoveredCol, this.game.cols, this.threatDetector.getThreatLevel());
+
+    // Turn transition effect
+    this.turnTransition.update(delta);
+    if (this.game.phase === 'playing' && this.game.currentPlayer !== this.lastTurnPlayer) {
+      this.turnTransition.trigger(this.game.currentPlayer);
+      this.lastTurnPlayer = this.game.currentPlayer;
+    }
 
     // Background music update
     if (this.music) {
@@ -2712,6 +3125,12 @@ class GameLoopSystem extends createSystem({
     this.hintActive = false;
     this.framePulseIntensity = 0.3;
 
+    // Move quality feedback
+    const quality = this.moveAnalyzer.analyzeMove(this.game.board, col, result.player);
+    if (quality.label && quality.quality !== 'ok') {
+      setTimeout(() => this.uiManager.showToast(quality.label), 200);
+    }
+
     // Check for combo and trigger commentary
     if (this.game.comboCount >= 2) {
       const comboTaunt = this.commentary.onCombo();
@@ -2758,6 +3177,7 @@ class GameLoopSystem extends createSystem({
           const confettiCenter = new Vector3(0, BOARD_Y + 0.5, BOARD_Z + 0.5);
           const confettiColors = [0x00ffff, 0xff44ff, 0xffcc00, 0x44ff44, 0xff6644, 0x8844ff];
           this.confetti.emit(confettiCenter, 60, confettiColors);
+          this.dynamicCamera.triggerCelebration();
         }
       }
 
@@ -2785,8 +3205,22 @@ class GameLoopSystem extends createSystem({
         setTimeout(() => this.uiManager.showToast(`Achievement: ${newAchs[0]}!`), 2400);
       }
 
-      this.uiManager.showPanel('gameover');
-      this.uiManager.updateGameover();
+      // Tournament tracking
+      const activeTournament = this.uiManager.activeTournament;
+      if (activeTournament?.active && this.game.winner !== 0) {
+        activeTournament.recordRound(this.game.winner, this.game.moveCount);
+        if (activeTournament.isOver()) {
+          save.tournamentsPlayed++;
+          if (activeTournament.winner === 1) save.tournamentsWon++;
+          writeSave();
+          this.game.checkAchievements(); // re-check for tournament achievements
+        }
+        this.uiManager.showPanel('tournament');
+        this.uiManager.updateTournament(activeTournament);
+      } else {
+        this.uiManager.showPanel('gameover');
+        this.uiManager.updateGameover();
+      }
     }, 600);
   }
 }
@@ -2844,6 +3278,14 @@ async function main() {
   const confetti = new ConfettiSystem(world.scene);
   const adaptiveAI = new AdaptiveAI();
 
+  // Round 5: new systems
+  const tournament = new TournamentManager();
+  const threatDetector = new ThreatDetector();
+  threatDetector.init(world.scene);
+  const dynamicCamera = new DynamicCamera();
+  const moveAnalyzer = new MoveQualityAnalyzer();
+  const turnTransition = new TurnTransition(world.scene);
+
   // Background music
   const music = new MusicSystem();
   const musicGain = audio.getMusicGain();
@@ -2859,7 +3301,7 @@ async function main() {
   uiManager.init(world, game, audio, boardRenderer, columnArrows, columnLabels);
 
   const loop = world.getSystem(GameLoopSystem)!;
-  loop.setRefs({ game, boardRenderer, uiManager, audio, particles, ambient, winLine, music, columnArrows, reflection, timerWarning, aiIndicator, holoRings, commentary, columnLabels, bounceController, confetti, adaptiveAI });
+  loop.setRefs({ game, boardRenderer, uiManager, audio, particles, ambient, winLine, music, columnArrows, reflection, timerWarning, aiIndicator, holoRings, commentary, columnLabels, bounceController, confetti, adaptiveAI, tournament, threatDetector, dynamicCamera, moveAnalyzer, turnTransition });
 }
 
 main().catch(console.error);
