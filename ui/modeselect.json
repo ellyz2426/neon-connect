@@ -1,0 +1,360 @@
+{
+  "element": {
+    "sourceTag": "container",
+    "type": "custom",
+    "children": [
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "SELECT MODE"
+        ],
+        "properties": {
+          "fontsize": "0.06",
+          "fontweight": "bold",
+          "color": "#00ffff"
+        },
+        "dataUid": "uid-2"
+      },
+      {
+        "sourceTag": "container",
+        "type": "custom",
+        "children": [
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Classic - Standard 7x6"
+            ],
+            "properties": {
+              "name": "btn-classic",
+              "fontsize": "0.035",
+              "color": "#00ffff",
+              "backgroundcolor": "#003355",
+              "padding": "0.02",
+              "borderradius": "0.015",
+              "bordercolor": "#00ccff",
+              "borderwidth": "0.002",
+              "hoverBackgroundcolor": "#005577",
+              "cursor": "pointer",
+              "textalign": "center"
+            },
+            "dataUid": "uid-4"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Timed - Clock per Turn"
+            ],
+            "properties": {
+              "name": "btn-timed",
+              "fontsize": "0.035",
+              "color": "#ffcc00",
+              "backgroundcolor": "#333300",
+              "padding": "0.02",
+              "borderradius": "0.015",
+              "bordercolor": "#ffcc00",
+              "borderwidth": "0.002",
+              "hoverBackgroundcolor": "#554400",
+              "cursor": "pointer",
+              "textalign": "center"
+            },
+            "dataUid": "uid-5"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Blitz - Total Time Limit"
+            ],
+            "properties": {
+              "name": "btn-blitz",
+              "fontsize": "0.035",
+              "color": "#ff6644",
+              "backgroundcolor": "#331100",
+              "padding": "0.02",
+              "borderradius": "0.015",
+              "bordercolor": "#ff6644",
+              "borderwidth": "0.002",
+              "hoverBackgroundcolor": "#552200",
+              "cursor": "pointer",
+              "textalign": "center"
+            },
+            "dataUid": "uid-6"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Pop Out - Remove Bottom Discs"
+            ],
+            "properties": {
+              "name": "btn-popout",
+              "fontsize": "0.035",
+              "color": "#ff66ff",
+              "backgroundcolor": "#330033",
+              "padding": "0.02",
+              "borderradius": "0.015",
+              "bordercolor": "#ff66ff",
+              "borderwidth": "0.002",
+              "hoverBackgroundcolor": "#550055",
+              "cursor": "pointer",
+              "textalign": "center"
+            },
+            "dataUid": "uid-7"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Five in a Row - 9x7 Grid"
+            ],
+            "properties": {
+              "name": "btn-five",
+              "fontsize": "0.035",
+              "color": "#66ff66",
+              "backgroundcolor": "#003300",
+              "padding": "0.02",
+              "borderradius": "0.015",
+              "bordercolor": "#66ff66",
+              "borderwidth": "0.002",
+              "hoverBackgroundcolor": "#005500",
+              "cursor": "pointer",
+              "textalign": "center"
+            },
+            "dataUid": "uid-8"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Daily Challenge"
+            ],
+            "properties": {
+              "name": "btn-daily",
+              "fontsize": "0.035",
+              "color": "#ff8844",
+              "backgroundcolor": "#331500",
+              "padding": "0.02",
+              "borderradius": "0.015",
+              "bordercolor": "#ff8844",
+              "borderwidth": "0.002",
+              "hoverBackgroundcolor": "#552200",
+              "cursor": "pointer",
+              "textalign": "center"
+            },
+            "dataUid": "uid-9"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Practice - Undo Available"
+            ],
+            "properties": {
+              "name": "btn-practice",
+              "fontsize": "0.035",
+              "color": "#88aaff",
+              "backgroundcolor": "#112244",
+              "padding": "0.02",
+              "borderradius": "0.015",
+              "bordercolor": "#4488cc",
+              "borderwidth": "0.002",
+              "hoverBackgroundcolor": "#223355",
+              "cursor": "pointer",
+              "textalign": "center"
+            },
+            "dataUid": "uid-10"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Versus - Local 2P"
+            ],
+            "properties": {
+              "name": "btn-versus",
+              "fontsize": "0.035",
+              "color": "#aaddff",
+              "backgroundcolor": "#102030",
+              "padding": "0.02",
+              "borderradius": "0.015",
+              "bordercolor": "#5599bb",
+              "borderwidth": "0.002",
+              "hoverBackgroundcolor": "#203040",
+              "cursor": "pointer",
+              "textalign": "center"
+            },
+            "dataUid": "uid-11"
+          }
+        ],
+        "properties": {
+          "flexdirection": "column",
+          "gap": "0.02",
+          "width": "1.0",
+          "margintop": "0.02"
+        },
+        "dataUid": "uid-3"
+      },
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "BACK"
+        ],
+        "properties": {
+          "name": "btn-back",
+          "fontsize": "0.035",
+          "color": "#888888",
+          "backgroundcolor": "#222222",
+          "padding": "0.02",
+          "borderradius": "0.015",
+          "bordercolor": "#666666",
+          "borderwidth": "0.002",
+          "hoverBackgroundcolor": "#444444",
+          "cursor": "pointer",
+          "textalign": "center",
+          "margintop": "0.02"
+        },
+        "dataUid": "uid-12"
+      }
+    ],
+    "properties": {
+      "flexdirection": "column",
+      "alignitems": "center",
+      "gap": "0.03",
+      "padding": "0.05",
+      "backgroundcolor": "#000a18ee",
+      "borderradius": "0.04",
+      "bordercolor": "#00ccff",
+      "borderwidth": "0.003",
+      "width": "1.2",
+      "height": "1.4"
+    },
+    "dataUid": "uid-1"
+  },
+  "classes": {},
+  "ranges": {
+    "uid-1": {
+      "start": {
+        "line": 0,
+        "column": 0
+      },
+      "end": {
+        "line": 13,
+        "column": 12
+      }
+    },
+    "uid-2": {
+      "start": {
+        "line": 1,
+        "column": 2
+      },
+      "end": {
+        "line": 1,
+        "column": 76
+      }
+    },
+    "uid-3": {
+      "start": {
+        "line": 2,
+        "column": 2
+      },
+      "end": {
+        "line": 11,
+        "column": 14
+      }
+    },
+    "uid-4": {
+      "start": {
+        "line": 3,
+        "column": 4
+      },
+      "end": {
+        "line": 3,
+        "column": 263
+      }
+    },
+    "uid-5": {
+      "start": {
+        "line": 4,
+        "column": 4
+      },
+      "end": {
+        "line": 4,
+        "column": 261
+      }
+    },
+    "uid-6": {
+      "start": {
+        "line": 5,
+        "column": 4
+      },
+      "end": {
+        "line": 5,
+        "column": 263
+      }
+    },
+    "uid-7": {
+      "start": {
+        "line": 6,
+        "column": 4
+      },
+      "end": {
+        "line": 6,
+        "column": 269
+      }
+    },
+    "uid-8": {
+      "start": {
+        "line": 7,
+        "column": 4
+      },
+      "end": {
+        "line": 7,
+        "column": 262
+      }
+    },
+    "uid-9": {
+      "start": {
+        "line": 8,
+        "column": 4
+      },
+      "end": {
+        "line": 8,
+        "column": 254
+      }
+    },
+    "uid-10": {
+      "start": {
+        "line": 9,
+        "column": 4
+      },
+      "end": {
+        "line": 9,
+        "column": 267
+      }
+    },
+    "uid-11": {
+      "start": {
+        "line": 10,
+        "column": 4
+      },
+      "end": {
+        "line": 10,
+        "column": 257
+      }
+    },
+    "uid-12": {
+      "start": {
+        "line": 12,
+        "column": 2
+      },
+      "end": {
+        "line": 12,
+        "column": 257
+      }
+    }
+  }
+}

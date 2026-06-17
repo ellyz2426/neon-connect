@@ -1,0 +1,471 @@
+{
+  "element": {
+    "sourceTag": "panel",
+    "type": "custom",
+    "children": [
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "TOURNAMENT"
+        ],
+        "properties": {
+          "id": "tournament-title",
+          "fontSize": "26",
+          "color": "#00ffff",
+          "fontWeight": "bold"
+        },
+        "dataUid": "uid-2"
+      },
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "Best of 5"
+        ],
+        "properties": {
+          "id": "tournament-format",
+          "fontSize": "16",
+          "color": "#88ccff"
+        },
+        "dataUid": "uid-3"
+      },
+      {
+        "sourceTag": "panel",
+        "type": "custom",
+        "children": [],
+        "properties": {
+          "width": "480",
+          "height": "3",
+          "backgroundColor": "#00ccff44",
+          "margin": "4"
+        },
+        "dataUid": "uid-4"
+      },
+      {
+        "sourceTag": "panel",
+        "type": "custom",
+        "children": [
+          {
+            "sourceTag": "panel",
+            "type": "custom",
+            "children": [
+              {
+                "sourceTag": "text",
+                "type": "custom",
+                "children": [
+                  "YOU"
+                ],
+                "properties": {
+                  "id": "t-p1-label",
+                  "fontSize": "14",
+                  "color": "#00ffff"
+                },
+                "dataUid": "uid-7"
+              },
+              {
+                "sourceTag": "text",
+                "type": "custom",
+                "children": [
+                  "0"
+                ],
+                "properties": {
+                  "id": "t-p1-score",
+                  "fontSize": "48",
+                  "color": "#00ffff",
+                  "fontWeight": "bold"
+                },
+                "dataUid": "uid-8"
+              }
+            ],
+            "properties": {
+              "flexDirection": "column",
+              "alignItems": "center",
+              "gap": "4"
+            },
+            "dataUid": "uid-6"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "vs"
+            ],
+            "properties": {
+              "fontSize": "28",
+              "color": "#446688"
+            },
+            "dataUid": "uid-9"
+          },
+          {
+            "sourceTag": "panel",
+            "type": "custom",
+            "children": [
+              {
+                "sourceTag": "text",
+                "type": "custom",
+                "children": [
+                  "CPU"
+                ],
+                "properties": {
+                  "id": "t-p2-label",
+                  "fontSize": "14",
+                  "color": "#ff44ff"
+                },
+                "dataUid": "uid-11"
+              },
+              {
+                "sourceTag": "text",
+                "type": "custom",
+                "children": [
+                  "0"
+                ],
+                "properties": {
+                  "id": "t-p2-score",
+                  "fontSize": "48",
+                  "color": "#ff44ff",
+                  "fontWeight": "bold"
+                },
+                "dataUid": "uid-12"
+              }
+            ],
+            "properties": {
+              "flexDirection": "column",
+              "alignItems": "center",
+              "gap": "4"
+            },
+            "dataUid": "uid-10"
+          }
+        ],
+        "properties": {
+          "flexDirection": "row",
+          "gap": "40",
+          "alignItems": "center",
+          "justifyContent": "center",
+          "width": "480"
+        },
+        "dataUid": "uid-5"
+      },
+      {
+        "sourceTag": "panel",
+        "type": "custom",
+        "children": [],
+        "properties": {
+          "width": "480",
+          "height": "3",
+          "backgroundColor": "#00ccff44",
+          "margin": "4"
+        },
+        "dataUid": "uid-13"
+      },
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "Round 1"
+        ],
+        "properties": {
+          "id": "tournament-round",
+          "fontSize": "16",
+          "color": "#aaaaaa"
+        },
+        "dataUid": "uid-14"
+      },
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "In Progress"
+        ],
+        "properties": {
+          "id": "tournament-status",
+          "fontSize": "18",
+          "color": "#ffcc00"
+        },
+        "dataUid": "uid-15"
+      },
+      {
+        "sourceTag": "panel",
+        "type": "custom",
+        "children": [
+          {
+            "sourceTag": "panel",
+            "type": "custom",
+            "children": [
+              {
+                "sourceTag": "text",
+                "type": "custom",
+                "children": [
+                  "Next Round"
+                ],
+                "properties": {
+                  "fontSize": "16",
+                  "color": "#00ffff"
+                },
+                "dataUid": "uid-18"
+              }
+            ],
+            "properties": {
+              "id": "btn-t-continue",
+              "width": "180",
+              "height": "44",
+              "backgroundColor": "#00ccff33",
+              "borderRadius": "8",
+              "alignItems": "center",
+              "justifyContent": "center"
+            },
+            "dataUid": "uid-17"
+          },
+          {
+            "sourceTag": "panel",
+            "type": "custom",
+            "children": [
+              {
+                "sourceTag": "text",
+                "type": "custom",
+                "children": [
+                  "Quit Tournament"
+                ],
+                "properties": {
+                  "fontSize": "16",
+                  "color": "#ff6666"
+                },
+                "dataUid": "uid-20"
+              }
+            ],
+            "properties": {
+              "id": "btn-t-quit",
+              "width": "180",
+              "height": "44",
+              "backgroundColor": "#ff444433",
+              "borderRadius": "8",
+              "alignItems": "center",
+              "justifyContent": "center"
+            },
+            "dataUid": "uid-19"
+          }
+        ],
+        "properties": {
+          "flexDirection": "row",
+          "gap": "20",
+          "margin": "8"
+        },
+        "dataUid": "uid-16"
+      }
+    ],
+    "properties": {
+      "width": "560",
+      "height": "360",
+      "backgroundColor": "#000a18cc",
+      "borderRadius": "18",
+      "flexDirection": "column",
+      "padding": "16",
+      "gap": "10",
+      "alignItems": "center"
+    },
+    "dataUid": "uid-1"
+  },
+  "classes": {},
+  "ranges": {
+    "uid-1": {
+      "start": {
+        "line": 0,
+        "column": 0
+      },
+      "end": {
+        "line": 26,
+        "column": 8
+      }
+    },
+    "uid-2": {
+      "start": {
+        "line": 1,
+        "column": 2
+      },
+      "end": {
+        "line": 1,
+        "column": 97
+      }
+    },
+    "uid-3": {
+      "start": {
+        "line": 2,
+        "column": 2
+      },
+      "end": {
+        "line": 2,
+        "column": 78
+      }
+    },
+    "uid-4": {
+      "start": {
+        "line": 3,
+        "column": 2
+      },
+      "end": {
+        "line": 3,
+        "column": 80
+      }
+    },
+    "uid-5": {
+      "start": {
+        "line": 4,
+        "column": 2
+      },
+      "end": {
+        "line": 14,
+        "column": 10
+      }
+    },
+    "uid-6": {
+      "start": {
+        "line": 5,
+        "column": 4
+      },
+      "end": {
+        "line": 8,
+        "column": 12
+      }
+    },
+    "uid-7": {
+      "start": {
+        "line": 6,
+        "column": 6
+      },
+      "end": {
+        "line": 6,
+        "column": 69
+      }
+    },
+    "uid-8": {
+      "start": {
+        "line": 7,
+        "column": 6
+      },
+      "end": {
+        "line": 7,
+        "column": 86
+      }
+    },
+    "uid-9": {
+      "start": {
+        "line": 9,
+        "column": 4
+      },
+      "end": {
+        "line": 9,
+        "column": 50
+      }
+    },
+    "uid-10": {
+      "start": {
+        "line": 10,
+        "column": 4
+      },
+      "end": {
+        "line": 13,
+        "column": 12
+      }
+    },
+    "uid-11": {
+      "start": {
+        "line": 11,
+        "column": 6
+      },
+      "end": {
+        "line": 11,
+        "column": 69
+      }
+    },
+    "uid-12": {
+      "start": {
+        "line": 12,
+        "column": 6
+      },
+      "end": {
+        "line": 12,
+        "column": 86
+      }
+    },
+    "uid-13": {
+      "start": {
+        "line": 15,
+        "column": 2
+      },
+      "end": {
+        "line": 15,
+        "column": 80
+      }
+    },
+    "uid-14": {
+      "start": {
+        "line": 16,
+        "column": 2
+      },
+      "end": {
+        "line": 16,
+        "column": 75
+      }
+    },
+    "uid-15": {
+      "start": {
+        "line": 17,
+        "column": 2
+      },
+      "end": {
+        "line": 17,
+        "column": 80
+      }
+    },
+    "uid-16": {
+      "start": {
+        "line": 18,
+        "column": 2
+      },
+      "end": {
+        "line": 25,
+        "column": 10
+      }
+    },
+    "uid-17": {
+      "start": {
+        "line": 19,
+        "column": 4
+      },
+      "end": {
+        "line": 21,
+        "column": 12
+      }
+    },
+    "uid-18": {
+      "start": {
+        "line": 20,
+        "column": 6
+      },
+      "end": {
+        "line": 20,
+        "column": 60
+      }
+    },
+    "uid-19": {
+      "start": {
+        "line": 22,
+        "column": 4
+      },
+      "end": {
+        "line": 24,
+        "column": 12
+      }
+    },
+    "uid-20": {
+      "start": {
+        "line": 23,
+        "column": 6
+      },
+      "end": {
+        "line": 23,
+        "column": 65
+      }
+    }
+  }
+}

@@ -1,0 +1,376 @@
+{
+  "element": {
+    "sourceTag": "container",
+    "type": "custom",
+    "children": [
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "NEON CONNECT"
+        ],
+        "properties": {
+          "name": "title-text",
+          "fontsize": "0.09",
+          "fontweight": "bold",
+          "color": "#00ffff"
+        },
+        "dataUid": "uid-2"
+      },
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "Connect Four in the Holodeck"
+        ],
+        "properties": {
+          "name": "subtitle",
+          "fontsize": "0.03",
+          "color": "#88ccff"
+        },
+        "dataUid": "uid-3"
+      },
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "Level 1 - Novice"
+        ],
+        "properties": {
+          "name": "level-display",
+          "fontsize": "0.025",
+          "color": "#ffcc00"
+        },
+        "dataUid": "uid-4"
+      },
+      {
+        "sourceTag": "container",
+        "type": "custom",
+        "children": [
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "PLAY"
+            ],
+            "properties": {
+              "name": "btn-play",
+              "fontsize": "0.045",
+              "fontweight": "bold",
+              "color": "#00ffff",
+              "backgroundcolor": "#003355",
+              "padding": "0.025",
+              "borderradius": "0.02",
+              "bordercolor": "#00ccff",
+              "borderwidth": "0.002",
+              "hoverBackgroundcolor": "#005577",
+              "cursor": "pointer",
+              "textalign": "center"
+            },
+            "dataUid": "uid-6"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "TOURNAMENT"
+            ],
+            "properties": {
+              "name": "btn-tournament",
+              "fontsize": "0.035",
+              "color": "#ffaa00",
+              "backgroundcolor": "#332200",
+              "padding": "0.02",
+              "borderradius": "0.02",
+              "bordercolor": "#ffaa00",
+              "borderwidth": "0.002",
+              "hoverBackgroundcolor": "#553300",
+              "cursor": "pointer",
+              "textalign": "center"
+            },
+            "dataUid": "uid-7"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "LEADERBOARD"
+            ],
+            "properties": {
+              "name": "btn-scores",
+              "fontsize": "0.035",
+              "color": "#ffcc00",
+              "backgroundcolor": "#333300",
+              "padding": "0.02",
+              "borderradius": "0.02",
+              "bordercolor": "#ffcc00",
+              "borderwidth": "0.002",
+              "hoverBackgroundcolor": "#554400",
+              "cursor": "pointer",
+              "textalign": "center"
+            },
+            "dataUid": "uid-8"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "ACHIEVEMENTS"
+            ],
+            "properties": {
+              "name": "btn-achievements",
+              "fontsize": "0.035",
+              "color": "#ff66ff",
+              "backgroundcolor": "#330033",
+              "padding": "0.02",
+              "borderradius": "0.02",
+              "bordercolor": "#ff66ff",
+              "borderwidth": "0.002",
+              "hoverBackgroundcolor": "#550055",
+              "cursor": "pointer",
+              "textalign": "center"
+            },
+            "dataUid": "uid-9"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "STATISTICS"
+            ],
+            "properties": {
+              "name": "btn-stats",
+              "fontsize": "0.035",
+              "color": "#66ff66",
+              "backgroundcolor": "#003300",
+              "padding": "0.02",
+              "borderradius": "0.02",
+              "bordercolor": "#66ff66",
+              "borderwidth": "0.002",
+              "hoverBackgroundcolor": "#005500",
+              "cursor": "pointer",
+              "textalign": "center"
+            },
+            "dataUid": "uid-10"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "DISC SKINS"
+            ],
+            "properties": {
+              "name": "btn-skins",
+              "fontsize": "0.035",
+              "color": "#ff8844",
+              "backgroundcolor": "#331100",
+              "padding": "0.02",
+              "borderradius": "0.02",
+              "bordercolor": "#ff8844",
+              "borderwidth": "0.002",
+              "hoverBackgroundcolor": "#552200",
+              "cursor": "pointer",
+              "textalign": "center"
+            },
+            "dataUid": "uid-11"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "SETTINGS"
+            ],
+            "properties": {
+              "name": "btn-settings",
+              "fontsize": "0.035",
+              "color": "#aaaaaa",
+              "backgroundcolor": "#222222",
+              "padding": "0.02",
+              "borderradius": "0.02",
+              "bordercolor": "#666666",
+              "borderwidth": "0.002",
+              "hoverBackgroundcolor": "#444444",
+              "cursor": "pointer",
+              "textalign": "center"
+            },
+            "dataUid": "uid-12"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "HOW TO PLAY"
+            ],
+            "properties": {
+              "name": "btn-help",
+              "fontsize": "0.035",
+              "color": "#88aaff",
+              "backgroundcolor": "#112244",
+              "padding": "0.02",
+              "borderradius": "0.02",
+              "bordercolor": "#4488cc",
+              "borderwidth": "0.002",
+              "hoverBackgroundcolor": "#223355",
+              "cursor": "pointer",
+              "textalign": "center"
+            },
+            "dataUid": "uid-13"
+          }
+        ],
+        "properties": {
+          "flexdirection": "column",
+          "gap": "0.02",
+          "margintop": "0.025",
+          "width": "0.9"
+        },
+        "dataUid": "uid-5"
+      }
+    ],
+    "properties": {
+      "flexdirection": "column",
+      "alignitems": "center",
+      "gap": "0.035",
+      "padding": "0.06",
+      "backgroundcolor": "#000a18ee",
+      "borderradius": "0.04",
+      "bordercolor": "#00ccff",
+      "borderwidth": "0.003",
+      "width": "1.2",
+      "height": "1.55"
+    },
+    "dataUid": "uid-1"
+  },
+  "classes": {},
+  "ranges": {
+    "uid-1": {
+      "start": {
+        "line": 0,
+        "column": 0
+      },
+      "end": {
+        "line": 14,
+        "column": 12
+      }
+    },
+    "uid-2": {
+      "start": {
+        "line": 1,
+        "column": 2
+      },
+      "end": {
+        "line": 1,
+        "column": 95
+      }
+    },
+    "uid-3": {
+      "start": {
+        "line": 2,
+        "column": 2
+      },
+      "end": {
+        "line": 2,
+        "column": 91
+      }
+    },
+    "uid-4": {
+      "start": {
+        "line": 3,
+        "column": 2
+      },
+      "end": {
+        "line": 3,
+        "column": 85
+      }
+    },
+    "uid-5": {
+      "start": {
+        "line": 4,
+        "column": 2
+      },
+      "end": {
+        "line": 13,
+        "column": 14
+      }
+    },
+    "uid-6": {
+      "start": {
+        "line": 5,
+        "column": 4
+      },
+      "end": {
+        "line": 5,
+        "column": 260
+      }
+    },
+    "uid-7": {
+      "start": {
+        "line": 6,
+        "column": 4
+      },
+      "end": {
+        "line": 6,
+        "column": 253
+      }
+    },
+    "uid-8": {
+      "start": {
+        "line": 7,
+        "column": 4
+      },
+      "end": {
+        "line": 7,
+        "column": 250
+      }
+    },
+    "uid-9": {
+      "start": {
+        "line": 8,
+        "column": 4
+      },
+      "end": {
+        "line": 8,
+        "column": 257
+      }
+    },
+    "uid-10": {
+      "start": {
+        "line": 9,
+        "column": 4
+      },
+      "end": {
+        "line": 9,
+        "column": 248
+      }
+    },
+    "uid-11": {
+      "start": {
+        "line": 10,
+        "column": 4
+      },
+      "end": {
+        "line": 10,
+        "column": 248
+      }
+    },
+    "uid-12": {
+      "start": {
+        "line": 11,
+        "column": 4
+      },
+      "end": {
+        "line": 11,
+        "column": 249
+      }
+    },
+    "uid-13": {
+      "start": {
+        "line": 12,
+        "column": 4
+      },
+      "end": {
+        "line": 12,
+        "column": 248
+      }
+    }
+  }
+}
