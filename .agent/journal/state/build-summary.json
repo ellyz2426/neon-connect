@@ -1,0 +1,15 @@
+{
+  "build_number": 53,
+  "game": "neon-connect",
+  "title": "Neon Connect VR",
+  "concept": "Connect Four in the Holodeck",
+  "total_rounds": 6,
+  "total_build_minutes": 125,
+  "final_loc": 3419,
+  "achievements": 80,
+  "panels": 16,
+  "disc_skins": 16,
+  "game_modes": 8,
+  "date": "2026-06-17",
+  "status": "complete"
+}
