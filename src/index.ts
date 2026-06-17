@@ -36,6 +36,9 @@ import {
   AdditiveBlending,
   CatmullRomCurve3,
   TubeGeometry,
+  ConeGeometry,
+  DoubleSide,
+  ShaderMaterial,
 } from 'three';
 
 // ─── Constants ──────────────────────────────────────────────────────
@@ -160,6 +163,11 @@ const ACHIEVEMENTS: AchDef[] = [
   { id: 'modes_3', name: 'Explorer', desc: 'Play 3 different modes', check: () => Object.keys(save.modeStats).filter(m => (save.modeStats[m]?.played ?? 0) > 0).length >= 3 },
   { id: 'xp_10000', name: 'XP Legend', desc: 'Earn 10000 total XP', check: () => save.xp >= 10000 },
   { id: 'loss_0', name: 'Undefeated', desc: 'Win 10 games without a loss', check: () => save.currentStreak >= 10 && save.losses === 0 },
+  { id: 'combo_3', name: 'Threat Maker', desc: '3-combo threat streak', check: () => save.bestStreak >= 1 },
+  { id: 'combo_5', name: 'Pressure Player', desc: '5-combo threat streak', check: () => save.bestStreak >= 2 },
+  { id: 'speed_60', name: 'Minute Man', desc: 'Win in under 60 seconds on Hard', check: () => save.fastestWinMs < 60000 },
+  { id: 'daily_25', name: 'Daily Devotion', desc: 'Complete 25 daily challenges', check: () => save.dailyCompleted >= 25 },
+  { id: 'moves_2500', name: 'Grand Tactician', desc: 'Make 2500 total moves', check: () => save.totalMoves >= 2500 },
 ];
 
 // ─── Skins ──────────────────────────────────────────────────────────
@@ -373,6 +381,10 @@ class AudioManager {
   private sfxGain: GainNode | null = null;
   private musicGain: GainNode | null = null;
 
+  getContext(): AudioContext | null { return this.ctx; }
+  getMasterGain(): GainNode | null { return this.masterGain; }
+  getMusicGain(): GainNode | null { return this.musicGain; }
+
   init() {
     try {
       this.ctx = new AudioContext();
@@ -428,6 +440,235 @@ class AudioManager {
 }
 
 // ─── Game Manager ───────────────────────────────────────────────────
+// ─── Background Music System ────────────────────────────────────────
+class MusicSystem {
+  private ctx: AudioContext | null = null;
+  private masterGain: GainNode | null = null;
+  private droneOscillators: OscillatorNode[] = [];
+  private droneGains: GainNode[] = [];
+  private isPlaying = false;
+  private themeIdx = 0;
+
+  // Theme-specific drone parameters: [baseFreq, interval, detune, type]
+  private readonly THEME_DRONES: [number, number, number, OscillatorType][][] = [
+    // Neon Holodeck: ethereal pad
+    [[55, 0, 0, 'sine'], [82.5, 0, 5, 'sine'], [110, 0, -3, 'triangle']],
+    // Crimson Arena: dark tension
+    [[49, 0, 0, 'sawtooth'], [73.5, 0, 8, 'sine'], [98, 0, -5, 'triangle']],
+    // Emerald Void: mysterious
+    [[65.4, 0, 0, 'sine'], [98, 0, 3, 'sine'], [130.8, 0, -2, 'triangle']],
+    // Solar Forge: warm
+    [[58.3, 0, 0, 'sine'], [87.3, 0, 7, 'sine'], [116.5, 0, -4, 'triangle']],
+    // Void Chamber: deep space
+    [[41.2, 0, 0, 'sine'], [61.7, 0, 10, 'sine'], [82.4, 0, -6, 'triangle']],
+  ];
+
+  init(audioCtx: AudioContext, masterGain: GainNode) {
+    this.ctx = audioCtx;
+    this.masterGain = masterGain;
+  }
+
+  start(themeIdx: number) {
+    if (!this.ctx || !this.masterGain || this.isPlaying) return;
+    this.stop();
+    this.themeIdx = themeIdx;
+    const params = this.THEME_DRONES[themeIdx % this.THEME_DRONES.length];
+
+    for (const [freq, _interval, detune, type] of params) {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      osc.detune.value = detune;
+      gain.gain.setValueAtTime(0, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.04, this.ctx.currentTime + 2); // fade in
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start();
+      this.droneOscillators.push(osc);
+      this.droneGains.push(gain);
+    }
+    this.isPlaying = true;
+  }
+
+  stop() {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    for (let i = 0; i < this.droneGains.length; i++) {
+      try {
+        this.droneGains[i].gain.linearRampToValueAtTime(0, now + 0.5);
+        this.droneOscillators[i].stop(now + 0.6);
+      } catch {}
+    }
+    this.droneOscillators = [];
+    this.droneGains = [];
+    this.isPlaying = false;
+  }
+
+  // Subtle LFO modulation for movement
+  update(time: number) {
+    if (!this.isPlaying || !this.ctx) return;
+    for (let i = 0; i < this.droneOscillators.length; i++) {
+      const osc = this.droneOscillators[i];
+      const params = this.THEME_DRONES[this.themeIdx % this.THEME_DRONES.length][i];
+      if (params) {
+        // Gentle frequency wobble
+        osc.detune.value = params[2] + Math.sin(time * 0.2 + i * 1.5) * 8;
+      }
+      // Gentle volume swell
+      if (this.droneGains[i]) {
+        const vol = 0.03 + 0.015 * Math.sin(time * 0.15 + i * 2);
+        this.droneGains[i].gain.value = vol;
+      }
+    }
+  }
+
+  setVolume(vol: number) {
+    // Controlled by music volume in save
+    for (const g of this.droneGains) {
+      if (g) g.gain.value = 0.04 * (vol / 100);
+    }
+  }
+}
+
+// ─── Column Arrow Indicators ────────────────────────────────────────
+class ColumnArrows {
+  private arrows: Mesh[] = [];
+  private arrowMats: MeshStandardMaterial[] = [];
+  private group: Group;
+
+  constructor(scene: { add: (o: any) => void }, cols: number, boardPos: Vector3) {
+    this.group = new Group();
+    const w = cols * CELL;
+    const arrowGeo = new ConeGeometry(0.04, 0.08, 4);
+    for (let c = 0; c < cols; c++) {
+      const mat = new MeshStandardMaterial({
+        color: 0x00ccff, emissive: new Color(0x00ccff),
+        emissiveIntensity: 0.5, transparent: true, opacity: 0,
+      });
+      const arrow = new Mesh(arrowGeo, mat);
+      arrow.rotation.x = Math.PI; // point down
+      const x = c * CELL - w / 2 + CELL / 2;
+      arrow.position.set(boardPos.x + x, boardPos.y + cols * CELL * 0.5 + 0.12, boardPos.z + 0.05);
+      this.arrows.push(arrow);
+      this.arrowMats.push(mat);
+      this.group.add(arrow);
+    }
+    scene.add(this.group);
+  }
+
+  highlight(col: number, player: CellVal) {
+    for (let c = 0; c < this.arrows.length; c++) {
+      const mat = this.arrowMats[c];
+      if (c === col) {
+        const clr = player === 1 ? 0x00ffff : 0xff44ff;
+        mat.color.set(clr);
+        mat.emissive.set(clr);
+        mat.opacity = 0.8;
+      } else {
+        mat.opacity = 0;
+      }
+    }
+  }
+
+  clearAll() {
+    for (const mat of this.arrowMats) mat.opacity = 0;
+  }
+
+  update(time: number, activeCol: number) {
+    // Bobbing animation for active arrow
+    for (let c = 0; c < this.arrows.length; c++) {
+      if (c === activeCol) {
+        this.arrows[c].position.y += Math.sin(time * 4) * 0.0003;
+      }
+    }
+  }
+
+  rebuild(cols: number, boardPos: Vector3) {
+    // Remove old arrows
+    while (this.group.children.length > 0) this.group.remove(this.group.children[0]);
+    this.arrows = [];
+    this.arrowMats = [];
+    const w = cols * CELL;
+    const arrowGeo = new ConeGeometry(0.04, 0.08, 4);
+    for (let c = 0; c < cols; c++) {
+      const mat = new MeshStandardMaterial({
+        color: 0x00ccff, emissive: new Color(0x00ccff),
+        emissiveIntensity: 0.5, transparent: true, opacity: 0,
+      });
+      const arrow = new Mesh(arrowGeo, mat);
+      arrow.rotation.x = Math.PI;
+      const x = c * CELL - w / 2 + CELL / 2;
+      arrow.position.set(boardPos.x + x, boardPos.y + cols * CELL * 0.5 + 0.12, boardPos.z + 0.05);
+      this.arrows.push(arrow);
+      this.arrowMats.push(mat);
+      this.group.add(arrow);
+    }
+  }
+}
+
+// ─── Board Reflection ───────────────────────────────────────────────
+class BoardReflection {
+  private reflectionGroup: Group;
+  private reflectionMat: MeshStandardMaterial;
+
+  constructor(scene: { add: (o: any) => void }, boardY: number) {
+    this.reflectionGroup = new Group();
+    // Semi-transparent reflective plane below the board
+    const reflGeo = new PlaneGeometry(2.5, 2.5);
+    this.reflectionMat = new MeshStandardMaterial({
+      color: 0x001133, emissive: new Color(0x001133),
+      emissiveIntensity: 0.15, transparent: true, opacity: 0.2,
+      roughness: 0.1, metalness: 0.8, side: DoubleSide,
+    });
+    const reflPlane = new Mesh(reflGeo, this.reflectionMat);
+    reflPlane.rotation.x = -Math.PI / 2;
+    reflPlane.position.set(0, 0.01, BOARD_Z);
+    this.reflectionGroup.add(reflPlane);
+    scene.add(this.reflectionGroup);
+  }
+
+  update(time: number, themeColor: number) {
+    // Subtle shimmer
+    const shimmer = 0.15 + 0.05 * Math.sin(time * 0.8);
+    this.reflectionMat.opacity = shimmer;
+    this.reflectionMat.emissive.set(themeColor);
+    this.reflectionMat.emissiveIntensity = 0.1 + 0.05 * Math.sin(time * 0.5);
+  }
+}
+
+// ─── Timer Warning Effect ───────────────────────────────────────────
+class TimerWarning {
+  private warningMesh: Mesh;
+  private warningMat: MeshStandardMaterial;
+  private active = false;
+
+  constructor(scene: { add: (o: any) => void }) {
+    const geo = new PlaneGeometry(40, 40);
+    this.warningMat = new MeshStandardMaterial({
+      color: 0xff0000, emissive: new Color(0xff0000),
+      emissiveIntensity: 0.3, transparent: true, opacity: 0, side: DoubleSide,
+    });
+    this.warningMesh = new Mesh(geo, this.warningMat);
+    this.warningMesh.position.set(0, 3, -5);
+    this.warningMesh.visible = false;
+    scene.add(this.warningMesh);
+  }
+
+  setActive(active: boolean) {
+    this.active = active;
+    this.warningMesh.visible = active;
+    if (!active) this.warningMat.opacity = 0;
+  }
+
+  update(time: number) {
+    if (!this.active) return;
+    const pulse = Math.abs(Math.sin(time * 3)) * 0.06;
+    this.warningMat.opacity = pulse;
+    this.warningMat.emissiveIntensity = 0.2 + pulse * 2;
+  }
+}
+
 class GameManager {
   phase: GamePhase = 'menu';
   mode: GameMode = 'classic';
@@ -450,6 +691,11 @@ class GameManager {
   pendingToast = '';
   toastTimer = 0;
   hintCol = -1; // for practice mode hints
+  comboCount = 0; // consecutive threats/setups by human
+  maxCombo = 0;
+  replayMoves: { col: number; player: CellVal; }[] = [];
+  replayIndex = 0;
+  replayPlaying = false;
 
   get cols(): number { return this.mode === 'five' ? COLS_BIG : COLS_STD; }
   get rows(): number { return this.mode === 'five' ? ROWS_BIG : ROWS_STD; }
@@ -471,6 +717,11 @@ class GameManager {
     else this.blitzTimeLeft = 0;
 
     this.phase = 'playing';
+    this.comboCount = 0;
+    this.maxCombo = 0;
+    this.replayMoves = [];
+    this.replayIndex = 0;
+    this.replayPlaying = false;
 
     // Daily challenge: AI makes first move with seeded randomness
     if (mode === 'daily' && this.dailyRng) {
@@ -495,6 +746,17 @@ class GameManager {
     const win = this.board.checkWin(player);
     if (win) { this.winner = player; this.winCells = win; this.endGame(); return { row, player }; }
     if (this.board.isFull()) { this.winner = 0; this.winCells = []; this.endGame(); return { row, player }; }
+
+    // Combo tracking: check if the human creates a 3-in-a-row threat
+    if (player === 1) {
+      const threatCount = this.countThreats(1);
+      if (threatCount > 0) {
+        this.comboCount++;
+        this.maxCombo = Math.max(this.maxCombo, this.comboCount);
+      } else {
+        this.comboCount = 0;
+      }
+    }
 
     this.currentPlayer = player === 1 ? 2 : 1;
     this.turnStartTime = performance.now();
@@ -530,6 +792,8 @@ class GameManager {
 
   endGame() {
     const elapsed = performance.now() - this.startTime;
+    // Store replay data
+    this.replayMoves = [...this.moveHistory];
     save.gamesPlayed++;
     const ms = save.modeStats[this.mode] ?? { played: 0, wins: 0 };
     ms.played++;
@@ -540,7 +804,8 @@ class GameManager {
       if (this.difficulty === 'hard' && this.moveCount <= this.connect * 2) save.perfectGames++;
       if (this.mode === 'daily') save.dailyCompleted++;
       const xpBase = this.difficulty === 'easy' ? 30 : this.difficulty === 'medium' ? 60 : 100;
-      addXp(xpBase + Math.floor(this.moveCount * 2));
+      const comboBonus = Math.min(this.maxCombo * 5, 50); // up to +50 XP for combos
+      addXp(xpBase + Math.floor(this.moveCount * 2) + comboBonus);
     } else if (this.winner === 2) {
       save.losses++; save.currentStreak = 0;
       addXp(15);
@@ -598,9 +863,32 @@ class GameManager {
   getXpEarned(): number {
     if (this.winner === 1) {
       const base = this.difficulty === 'easy' ? 30 : this.difficulty === 'medium' ? 60 : 100;
-      return base + Math.floor(this.moveCount * 2);
+      const comboBonus = Math.min(this.maxCombo * 5, 50);
+      return base + Math.floor(this.moveCount * 2) + comboBonus;
     }
     return this.winner === 2 ? 15 : 25;
+  }
+
+  countThreats(player: CellVal): number {
+    const { cols, rows, connect, board } = this.board;
+    const dirs = [[1,0],[0,1],[1,1],[1,-1]];
+    let threats = 0;
+    for (let c = 0; c < cols; c++) {
+      for (let r = 0; r < rows; r++) {
+        for (const [dc, dr] of dirs) {
+          let pCount = 0, empty = 0;
+          for (let i = 0; i < connect; i++) {
+            const nc = c + dc * i, nr = r + dr * i;
+            if (nc < 0 || nc >= cols || nr < 0 || nr >= rows) { pCount = -1; break; }
+            if (board[nc][nr] === player) pCount++;
+            else if (board[nc][nr] === 0) empty++;
+            else { pCount = -1; break; }
+          }
+          if (pCount === connect - 1 && empty === 1) threats++;
+        }
+      }
+    }
+    return threats;
   }
 }
 
@@ -1146,6 +1434,7 @@ class UIManager {
   private game!: GameManager;
   private audio!: AudioManager;
   private renderer!: BoardRenderer;
+  private columnArrows: ColumnArrows | null = null;
   private panels: Map<string, { entity: any; doc: UIKitDocument | null; }> = new Map();
   private panelEntities: Map<string, any> = new Map();
   private toastEntity: any;
@@ -1156,14 +1445,15 @@ class UIManager {
   private readonly PANEL_NAMES = [
     'title', 'hud', 'gameover', 'modeselect', 'difficulty',
     'achievements', 'settings', 'pause', 'stats', 'leaderboard',
-    'help', 'skins',
+    'help', 'skins', 'replay',
   ];
 
-  init(world: World, game: GameManager, audio: AudioManager, renderer: BoardRenderer) {
+  init(world: World, game: GameManager, audio: AudioManager, renderer: BoardRenderer, columnArrows?: ColumnArrows) {
     this.world = world;
     this.game = game;
     this.audio = audio;
     this.renderer = renderer;
+    this.columnArrows = columnArrows ?? null;
 
     // Create all panels as Follower (head-locked HUDs)
     for (const name of this.PANEL_NAMES) {
@@ -1262,6 +1552,7 @@ class UIManager {
       case 'gameover':
         btn('btn-rematch', () => ui.startWithCountdown(game.difficulty));
         btn('btn-menu', () => { game.phase = 'menu'; ui.showPanel('title'); ui.updateTitle(); });
+        btn('btn-replay', () => { ui.startReplay(); });
         break;
 
       case 'pause':
@@ -1309,6 +1600,15 @@ class UIManager {
         }
         btn('btn-back', () => { game.phase = 'menu'; ui.showPanel('title'); ui.updateTitle(); });
         break;
+
+      case 'replay':
+        btn('btn-replay-start', () => { game.replayIndex = 0; ui.updateReplayState(); });
+        btn('btn-replay-prev', () => { if (game.replayIndex > 0) { game.replayIndex--; ui.updateReplayState(); } });
+        btn('btn-replay-next', () => { if (game.replayIndex < game.replayMoves.length) { game.replayIndex++; ui.updateReplayState(); } });
+        btn('btn-replay-end', () => { game.replayIndex = game.replayMoves.length; ui.updateReplayState(); });
+        btn('btn-replay-play', () => { game.replayPlaying = !game.replayPlaying; ui.updateReplayPlayBtn(); });
+        btn('btn-replay-close', () => { game.replayPlaying = false; game.phase = 'gameover'; ui.showPanel('gameover'); ui.updateGameover(); });
+        break;
     }
   }
 
@@ -1337,6 +1637,8 @@ class UIManager {
     this.game.startGame(this.game.mode, diff);
     this.renderer.buildBoard(this.game);
     this.renderer.startEntryAnimation();
+    // Rebuild column arrows for the current grid size
+    if (this.columnArrows) this.columnArrows.rebuild(this.game.cols, new Vector3(0, BOARD_Y, BOARD_Z));
 
     // Rebuild existing discs (for daily challenge first move)
     for (let c = 0; c < this.game.cols; c++) {
@@ -1450,7 +1752,63 @@ class UIManager {
     time?.setProperties({ text: `Time: ${m}:${s.toString().padStart(2, '0')}` });
     streak?.setProperties({ text: `Win Streak: ${save.currentStreak}` });
     rating?.setProperties({ text: `Rating: ${game.getRating()}` });
-    xp?.setProperties({ text: `+${game.getXpEarned()} XP` });
+
+    const combo = doc.getElementById('stat-combo') as UIKit.Text | undefined;
+    combo?.setProperties({ text: `Max Combo: ${game.maxCombo}x`, color: game.maxCombo >= 3 ? '#ff44ff' : '#aaaaaa' });
+    xp?.setProperties({ text: `+${game.getXpEarned()} XP${game.maxCombo > 0 ? ` (${game.maxCombo}x combo!)` : ''}` });
+  }
+
+  startReplay() {
+    const game = this.game;
+    if (game.replayMoves.length === 0) return;
+    game.replayIndex = 0;
+    game.replayPlaying = false;
+    game.phase = 'achievements'; // use a non-playing phase to block input
+    this.showPanel('replay');
+    this.updateReplayState();
+  }
+
+  updateReplayState() {
+    const doc = this.panels.get('replay')?.doc;
+    if (!doc) return;
+    const moveLabel = doc.getElementById('replay-move') as UIKit.Text | undefined;
+    moveLabel?.setProperties({ text: `Move ${this.game.replayIndex} / ${this.game.replayMoves.length}` });
+
+    // Rebuild board to show state at replayIndex
+    this.renderer.buildBoard(this.game);
+    const tempBoard = new BoardState(this.game.cols, this.game.rows, this.game.connect);
+    for (let i = 0; i < this.game.replayIndex; i++) {
+      const mv = this.game.replayMoves[i];
+      tempBoard.drop(mv.col, mv.player);
+    }
+    for (let c = 0; c < this.game.cols; c++) {
+      for (let r = 0; r < this.game.rows; r++) {
+        if (tempBoard.board[c][r] !== 0) {
+          this.renderer.addDisc(c, r, tempBoard.board[c][r], this.game, false);
+        }
+      }
+    }
+    // Highlight last move if any
+    if (this.game.replayIndex > 0) {
+      const lastMove = this.game.replayMoves[this.game.replayIndex - 1];
+      const lastRow = this.findLandingRow(tempBoard, lastMove.col, lastMove.player);
+      if (lastRow >= 0) this.renderer.markLastMove(lastMove.col, lastRow, this.game);
+    }
+  }
+
+  private findLandingRow(board: BoardState, col: number, _player: CellVal): number {
+    // Find the top occupied row in this column
+    for (let r = board.rows - 1; r >= 0; r--) {
+      if (board.board[col][r] !== 0) return r;
+    }
+    return -1;
+  }
+
+  updateReplayPlayBtn() {
+    const doc = this.panels.get('replay')?.doc;
+    if (!doc) return;
+    const btn = doc.getElementById('replay-play-text') as UIKit.Text | undefined;
+    btn?.setProperties({ text: this.game.replayPlaying ? 'Pause' : 'Play' });
   }
 
   updateDifficultyLabel() {
@@ -1601,8 +1959,14 @@ class GameLoopSystem extends createSystem({
   private hintActive = false;
   private hintFlashTimer = 0;
   private prevHoveredCol = -1;
+  private music!: MusicSystem;
+  private columnArrows!: ColumnArrows;
+  private reflection!: BoardReflection;
+  private timerWarning!: TimerWarning;
+  private replayAutoTimer = 0;
+  private musicStarted = false;
 
-  setRefs(refs: { game: GameManager; boardRenderer: BoardRenderer; uiManager: UIManager; audio: AudioManager; particles: ParticleSystem; ambient: AmbientParticles; winLine: WinLineRenderer; }) {
+  setRefs(refs: { game: GameManager; boardRenderer: BoardRenderer; uiManager: UIManager; audio: AudioManager; particles: ParticleSystem; ambient: AmbientParticles; winLine: WinLineRenderer; music: MusicSystem; columnArrows: ColumnArrows; reflection: BoardReflection; timerWarning: TimerWarning; }) {
     this.game = refs.game;
     this.boardRenderer = refs.boardRenderer;
     this.uiManager = refs.uiManager;
@@ -1610,6 +1974,10 @@ class GameLoopSystem extends createSystem({
     this.particles = refs.particles;
     this.ambient = refs.ambient;
     this.winLine = refs.winLine;
+    this.music = refs.music;
+    this.columnArrows = refs.columnArrows;
+    this.reflection = refs.reflection;
+    this.timerWarning = refs.timerWarning;
   }
 
   update(delta: number, time: number) {
@@ -1639,6 +2007,30 @@ class GameLoopSystem extends createSystem({
     this.particles.update(delta, new Color(theme.grid));
     this.ambient.update(time);
     this.winLine.update(delta);
+    this.reflection.update(time, theme.grid);
+
+    // Background music update
+    if (this.music) {
+      this.music.update(time);
+      if (!this.musicStarted) {
+        this.music.start(save.theme);
+        this.musicStarted = true;
+      }
+    }
+
+    // Replay auto-play
+    if (this.game.replayPlaying && this.game.replayIndex < this.game.replayMoves.length) {
+      this.replayAutoTimer -= delta;
+      if (this.replayAutoTimer <= 0) {
+        this.game.replayIndex++;
+        this.uiManager.updateReplayState();
+        this.replayAutoTimer = 0.8; // 0.8s per move in auto-play
+        if (this.game.replayIndex >= this.game.replayMoves.length) {
+          this.game.replayPlaying = false;
+          this.uiManager.updateReplayPlayBtn();
+        }
+      }
+    }
 
     // Hint flash
     if (this.hintActive) {
@@ -1648,6 +2040,8 @@ class GameLoopSystem extends createSystem({
 
     if (this.game.phase !== 'playing') {
       this.boardRenderer.hideGhost();
+      this.columnArrows.clearAll();
+      this.timerWarning.setActive(false);
       return;
     }
 
@@ -1661,6 +2055,10 @@ class GameLoopSystem extends createSystem({
     // Timer modes
     if (this.game.mode === 'timed' && this.game.turnTimeLimit > 0 && !this.game.aiThinking) {
       const elapsed = performance.now() - this.game.turnStartTime;
+      const remaining = this.game.turnTimeLimit - elapsed;
+      // Timer warning when <5s remaining
+      this.timerWarning.setActive(remaining < 5000 && remaining > 0);
+      if (this.timerWarning) this.timerWarning.update(time);
       if (elapsed > this.game.turnTimeLimit) {
         // Time's up — auto-move or forfeit
         if (this.game.currentPlayer === 1 && !this.game.vsMode) {
@@ -1673,6 +2071,9 @@ class GameLoopSystem extends createSystem({
 
     if (this.game.mode === 'blitz') {
       const total = performance.now() - this.game.startTime;
+      const remaining = this.game.blitzTimeLeft - total;
+      this.timerWarning.setActive(remaining < 10000 && remaining > 0);
+      if (this.timerWarning) this.timerWarning.update(time);
       if (total > this.game.blitzTimeLeft) {
         this.game.winner = this.game.currentPlayer === 1 ? 2 : 1;
         this.game.endGame();
@@ -1742,6 +2143,7 @@ class GameLoopSystem extends createSystem({
     this.hoveredCol = newHovered;
     if (newHovered >= 0) {
       this.boardRenderer.highlightColumn(newHovered, this.game.currentPlayer);
+      this.columnArrows.highlight(newHovered, this.game.currentPlayer);
       // Show ghost disc at landing row
       const topRow = this.game.board.topRow(newHovered);
       const landRow = topRow + 1;
@@ -1762,6 +2164,7 @@ class GameLoopSystem extends createSystem({
     } else {
       this.boardRenderer.clearHighlight();
       this.boardRenderer.hideGhost();
+      this.columnArrows.clearAll();
     }
   }
 
@@ -1948,15 +2351,26 @@ async function main() {
   const particles = new ParticleSystem(world.scene);
   const ambient = new AmbientParticles(world.scene, theme.grid);
   const winLine = new WinLineRenderer(world.scene);
+  const columnArrows = new ColumnArrows(world.scene, COLS_STD, new Vector3(0, BOARD_Y, BOARD_Z));
+  const reflection = new BoardReflection(world.scene, BOARD_Y);
+  const timerWarning = new TimerWarning(world.scene);
+
+  // Background music
+  const music = new MusicSystem();
+  const musicGain = audio.getMusicGain();
+  const audioCtx = audio.getContext();
+  if (audioCtx && musicGain) {
+    music.init(audioCtx, musicGain);
+  }
 
   // Register game loop system BEFORE UI (UI init may throw)
   world.registerSystem(GameLoopSystem);
 
   const uiManager = new UIManager();
-  uiManager.init(world, game, audio, boardRenderer);
+  uiManager.init(world, game, audio, boardRenderer, columnArrows);
 
   const loop = world.getSystem(GameLoopSystem)!;
-  loop.setRefs({ game, boardRenderer, uiManager, audio, particles, ambient, winLine });
+  loop.setRefs({ game, boardRenderer, uiManager, audio, particles, ambient, winLine, music, columnArrows, reflection, timerWarning });
 }
 
 main().catch(console.error);

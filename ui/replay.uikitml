@@ -1,0 +1,34 @@
+<panel
+  width="420"
+  height="180"
+  backgroundColor="#000a18cc"
+  borderRadius="16"
+  flexDirection="column"
+  alignItems="center"
+  justifyContent="center"
+  gap="10"
+  padding="12"
+>
+  <text id="replay-title" fontSize="20" fontWeight="bold" color="#00ccff">REPLAY</text>
+  <text id="replay-move" fontSize="14" color="#aaddff">Move 0 / 0</text>
+  <panel flexDirection="row" gap="12" alignItems="center" justifyContent="center" padding="6">
+    <panel id="btn-replay-start" width="50" height="36" backgroundColor="#003355" borderRadius="8" alignItems="center" justifyContent="center" hover={{ backgroundColor: "#005588" }}>
+      <text fontSize="13" color="#00ccff">|&lt;</text>
+    </panel>
+    <panel id="btn-replay-prev" width="50" height="36" backgroundColor="#003355" borderRadius="8" alignItems="center" justifyContent="center" hover={{ backgroundColor: "#005588" }}>
+      <text fontSize="13" color="#00ccff">&lt;</text>
+    </panel>
+    <panel id="btn-replay-play" width="60" height="36" backgroundColor="#004466" borderRadius="8" alignItems="center" justifyContent="center" hover={{ backgroundColor: "#006699" }}>
+      <text id="replay-play-text" fontSize="13" color="#00ffff">Play</text>
+    </panel>
+    <panel id="btn-replay-next" width="50" height="36" backgroundColor="#003355" borderRadius="8" alignItems="center" justifyContent="center" hover={{ backgroundColor: "#005588" }}>
+      <text fontSize="13" color="#00ccff">&gt;</text>
+    </panel>
+    <panel id="btn-replay-end" width="50" height="36" backgroundColor="#003355" borderRadius="8" alignItems="center" justifyContent="center" hover={{ backgroundColor: "#005588" }}>
+      <text fontSize="13" color="#00ccff">&gt;|</text>
+    </panel>
+  </panel>
+  <panel id="btn-replay-close" width="100" height="32" backgroundColor="#331122" borderRadius="8" alignItems="center" justifyContent="center" hover={{ backgroundColor: "#552244" }}>
+    <text fontSize="12" color="#ff6688">Close</text>
+  </panel>
+</panel>

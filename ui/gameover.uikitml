@@ -1,4 +1,4 @@
-<container flexDirection="column" alignItems="center" gap="0.025" padding="0.05" backgroundColor="#000a18ee" borderRadius="0.04" borderColor="#00ccff" borderWidth="0.003" width="1.0" height="1.1">
+<container flexDirection="column" alignItems="center" gap="0.025" padding="0.05" backgroundColor="#000a18ee" borderRadius="0.04" borderColor="#00ccff" borderWidth="0.003" width="1.0" height="1.2">
   <text name="result-title" fontSize="0.07" fontWeight="bold" color="#00ffff">YOU WIN!</text>
   <text name="result-mode" fontSize="0.025" color="#88ccff">Classic - Medium</text>
   <container flexDirection="column" gap="0.015" width="0.8" marginTop="0.02" padding="0.03" backgroundColor="#001122" borderRadius="0.02">
@@ -7,9 +7,11 @@
     <text name="stat-streak" fontSize="0.025" color="#ffcc00">Win Streak: 3</text>
     <text name="stat-rating" fontSize="0.025" color="#66ff66">Rating: A</text>
     <text name="stat-xp" fontSize="0.025" color="#ff8844">+150 XP</text>
+    <text name="stat-combo" fontSize="0.025" color="#ff66ff">Combo: 0x</text>
   </container>
   <container flexDirection="column" gap="0.02" width="0.7" marginTop="0.02">
     <text name="btn-rematch" fontSize="0.04" fontWeight="bold" color="#00ffff" backgroundColor="#003355" padding="0.025" borderRadius="0.02" borderColor="#00ccff" borderWidth="0.002" hover-backgroundColor="#005577" cursor="pointer" textAlign="center">REMATCH</text>
+    <text name="btn-replay" fontSize="0.035" color="#aaddff" backgroundColor="#112244" padding="0.02" borderRadius="0.015" borderColor="#336699" borderWidth="0.002" hover-backgroundColor="#224466" cursor="pointer" textAlign="center">REPLAY</text>
     <text name="btn-menu" fontSize="0.035" color="#888888" backgroundColor="#222222" padding="0.02" borderRadius="0.015" borderColor="#666666" borderWidth="0.002" hover-backgroundColor="#444444" cursor="pointer" textAlign="center">MAIN MENU</text>
   </container>
 </container>
