@@ -86,6 +86,9 @@ interface SaveData {
   modeStats: Record<string, { played: number; wins: number; }>;
   tournamentsWon: number;
   tournamentsPlayed: number;
+  totalPlayTimeMs: number;
+  longestGameMs: number;
+  shortestWinMoves: number;
 }
 
 function defaultSave(): SaveData {
@@ -97,6 +100,7 @@ function defaultSave(): SaveData {
     masterVol: 100, sfxVol: 100, musicVol: 100, theme: 0,
     leaderboard: [], modeStats: {},
     tournamentsWon: 0, tournamentsPlayed: 0,
+    totalPlayTimeMs: 0, longestGameMs: 0, shortestWinMoves: Infinity,
   };
 }
 
@@ -161,7 +165,7 @@ const ACHIEVEMENTS: AchDef[] = [
   { id: 'play_1', name: 'Welcome', desc: 'Play your first game', check: () => save.gamesPlayed >= 1 },
   { id: 'play_100', name: 'Centurion', desc: 'Play 100 games', check: () => save.gamesPlayed >= 100 },
   { id: 'level_50', name: 'Transcendent', desc: 'Reach level 50', check: () => save.level >= 50 },
-  { id: 'skin_all', name: 'Collector', desc: 'Unlock all disc skins', check: () => Array.from({length: 14}, (_, i) => skinUnlocked(i)).every(u => u) },
+  { id: 'skin_all', name: 'Collector', desc: 'Unlock all disc skins', check: () => Array.from({length: 16}, (_, i) => skinUnlocked(i)).every(u => u) },
   { id: 'under_10', name: 'Efficiency', desc: 'Win in under 10 moves', check: () => save.wins >= 1 },
   { id: 'modes_3', name: 'Explorer', desc: 'Play 3 different modes', check: () => Object.keys(save.modeStats).filter(m => (save.modeStats[m]?.played ?? 0) > 0).length >= 3 },
   { id: 'xp_10000', name: 'XP Legend', desc: 'Earn 10000 total XP', check: () => save.xp >= 10000 },
@@ -185,6 +189,11 @@ const ACHIEVEMENTS: AchDef[] = [
   { id: 'tourn_5', name: 'Tournament Legend', desc: 'Win 5 tournaments', check: () => save.tournamentsWon >= 5 },
   { id: 'threat_master', name: 'Threat Weaver', desc: '5-combo threat chain in one game', check: () => save.bestStreak >= 1 },
   { id: 'blitz_hard', name: 'Blitz Survivor', desc: 'Win Blitz on Hard', check: () => (save.modeStats['blitz']?.wins ?? 0) >= 1 },
+  { id: 'time_1h', name: 'Dedicated Hour', desc: 'Play for 1 hour total', check: () => save.totalPlayTimeMs >= 3600000 },
+  { id: 'time_5h', name: 'Marathon Runner', desc: 'Play for 5 hours total', check: () => save.totalPlayTimeMs >= 18000000 },
+  { id: 'min_moves', name: 'Minimalist', desc: 'Win in 7 or fewer moves', check: () => save.shortestWinMoves <= 7 },
+  { id: 'tourn_10', name: 'Grand Champion', desc: 'Win 10 tournaments', check: () => save.tournamentsWon >= 10 },
+  { id: 'long_game', name: 'Endurance', desc: 'Play a game lasting 5+ minutes', check: () => save.longestGameMs >= 300000 },
 ];
 
 // ─── Skins ──────────────────────────────────────────────────────────
@@ -203,6 +212,8 @@ const SKINS = [
   { name: 'Nebula Dust', color: 0xcc66ff, emissive: 0x8833cc, req: 'Level 25' },
   { name: 'Starfire', color: 0xff8844, emissive: 0xcc5522, req: 'Tournament Win' },
   { name: 'Deep Ocean', color: 0x2266aa, emissive: 0x114488, req: '3 Tourney Wins' },
+  { name: 'Aurora', color: 0x44ffaa, emissive: 0x22cc66, req: '200 Moves' },
+  { name: 'Ember Glow', color: 0xff6633, emissive: 0xcc4422, req: 'Level 35' },
 ];
 
 function skinUnlocked(i: number): boolean {
@@ -220,6 +231,8 @@ function skinUnlocked(i: number): boolean {
   if (i === 11) return save.level >= 25;
   if (i === 12) return (save as any).tournamentsWon >= 1;
   if (i === 13) return (save as any).tournamentsWon >= 3;
+  if (i === 14) return save.totalMoves >= 200;
+  if (i === 15) return save.level >= 35;
   return false;
 }
 
@@ -389,6 +402,24 @@ function aiMove(bs: BoardState, difficulty: Difficulty): number {
   // Easy: 30% random
   if (difficulty === 'easy' && Math.random() < 0.3) return moves[Math.floor(Math.random() * moves.length)];
 
+  // Opening book for first 2 AI moves on standard board (7-col)
+  if (bs.cols === 7 && difficulty !== 'easy') {
+    const totalPieces = bs.board.reduce((s, col) => s + col.filter(c => c !== 0).length, 0);
+    if (totalPieces <= 3) {
+      const center = 3;
+      // First AI move: always take center if available
+      if (totalPieces <= 1 && bs.canDrop(center)) return center;
+      // Second AI move: respond based on human position
+      if (totalPieces <= 3) {
+        // If human played center, play adjacent
+        if (bs.board[center][0] === human && bs.canDrop(center)) return center;
+        // Prefer center columns (2,3,4) for strategic opening
+        const preferred = [3, 2, 4, 1, 5].filter(c => bs.canDrop(c));
+        if (preferred.length > 0 && Math.random() < 0.8) return preferred[0];
+      }
+    }
+  }
+
   let bestScore = -Infinity, bestCol = moves[0];
   for (const col of moves) {
     bs.drop(col, ai);
@@ -462,6 +493,7 @@ class AudioManager {
   countdown() { this.tone(660, 0.12, 'square'); }
   invalid() { this.tone(200, 0.2, 'sawtooth'); }
   popout() { this.tone(330, 0.2, 'sine'); setTimeout(() => this.tone(220, 0.15, 'sine'), 100); }
+  turnChange() { this.tone(1600, 0.04, 'sine'); }
 }
 
 // ─── Tournament Manager ─────────────────────────────────────────────
@@ -1514,12 +1546,15 @@ class GameManager {
     // Store replay data
     this.replayMoves = [...this.moveHistory];
     save.gamesPlayed++;
+    save.totalPlayTimeMs += elapsed;
+    save.longestGameMs = Math.max(save.longestGameMs, elapsed);
     const ms = save.modeStats[this.mode] ?? { played: 0, wins: 0 };
     ms.played++;
     if (this.winner === 1) {
       save.wins++; ms.wins++; save.currentStreak++;
       save.bestStreak = Math.max(save.bestStreak, save.currentStreak);
       if (elapsed < save.fastestWinMs) save.fastestWinMs = elapsed;
+      if (this.moveCount < save.shortestWinMoves) save.shortestWinMoves = this.moveCount;
       if (this.difficulty === 'hard' && this.moveCount <= this.connect * 2) save.perfectGames++;
       if (this.mode === 'daily') save.dailyCompleted++;
       const xpBase = this.difficulty === 'easy' ? 30 : this.difficulty === 'medium' ? 60 : 100;
@@ -2325,7 +2360,7 @@ class UIManager {
         break;
 
       case 'skins':
-        for (let i = 1; i <= 14; i++) {
+        for (let i = 1; i <= 16; i++) {
           const idx = i - 1;
           btn(`skin-${i}`, () => {
             if (skinUnlocked(idx)) { save.equippedSkin = idx; writeSave(); ui.updateSkins(); }
@@ -2617,18 +2652,40 @@ class UIManager {
       const el = doc.getElementById(id) as UIKit.Text | undefined;
       el?.setProperties({ text });
     };
-    set('stat-games', `Games Played: ${save.gamesPlayed}`);
+    set('stat-games', `Games: ${save.gamesPlayed}`);
     set('stat-wins', `Wins: ${save.wins}`);
     set('stat-losses', `Losses: ${save.losses}`);
     set('stat-draws', `Draws: ${save.draws}`);
     set('stat-winrate', `Win Rate: ${save.gamesPlayed > 0 ? Math.round(save.wins / save.gamesPlayed * 100) : 0}%`);
-    set('stat-streak', `Best Win Streak: ${save.bestStreak}`);
+    set('stat-streak', `Best Streak: ${save.bestStreak}`);
     set('stat-moves', `Total Moves: ${save.totalMoves}`);
     set('stat-fastest', `Fastest Win: ${save.fastestWinMs < Infinity ? (save.fastestWinMs / 1000).toFixed(1) + 's' : '--'}`);
-    set('stat-perfect', `Perfect Games: ${save.perfectGames}`);
-    set('stat-daily', `Daily Challenges: ${save.dailyCompleted}`);
-    set('stat-level', `Level: ${save.level} - ${levelTitle(save.level)}`);
+    set('stat-perfect', `Perfect: ${save.perfectGames}`);
+    set('stat-daily', `Dailies: ${save.dailyCompleted}`);
+    // Time played
+    const totalMinutes = Math.floor((save.totalPlayTimeMs || 0) / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    set('stat-time', `Time: ${hours > 0 ? hours + 'h ' : ''}${mins}m`);
+    set('stat-tourn', `Tournaments: ${save.tournamentsWon}W / ${save.tournamentsPlayed}`);
+    // Per-mode stats
+    const modeNames: [string, string][] = [
+      ['classic', 'Classic'], ['timed', 'Timed'], ['blitz', 'Blitz'],
+      ['popout', 'Pop Out'], ['five', 'Five Row'], ['daily', 'Daily'],
+      ['practice', 'Practice'], ['versus', 'Versus'],
+    ];
+    for (const [mode, label] of modeNames) {
+      const ms = save.modeStats[mode];
+      if (ms && ms.played > 0) {
+        const wr = ms.played > 0 ? Math.round(ms.wins / ms.played * 100) : 0;
+        set(`stat-m-${mode}`, `${label}: ${ms.wins}/${ms.played} (${wr}%)`);
+      } else {
+        set(`stat-m-${mode}`, `${label}: --`);
+      }
+    }
+    set('stat-level', `Level ${save.level} - ${levelTitle(save.level)}`);
     set('stat-xp', `XP: ${save.xp} / ${xpForLevel(save.level)}`);
+    set('stat-achs', `Achievements: ${save.achievementsUnlocked.length}/${ACHIEVEMENTS.length}`);
   }
 
   updateLeaderboard() {
@@ -2662,7 +2719,7 @@ class UIManager {
   updateSkins() {
     const doc = this.panels.get('skins')?.doc;
     if (!doc) return;
-    for (let i = 1; i <= 14; i++) {
+    for (let i = 1; i <= 16; i++) {
       const el = doc.getElementById(`skin-${i}`) as UIKit.Text | undefined;
       if (!el) continue;
       const skin = SKINS[i - 1];
@@ -2855,6 +2912,7 @@ class GameLoopSystem extends createSystem({
     if (this.game.phase === 'playing' && this.game.currentPlayer !== this.lastTurnPlayer) {
       this.turnTransition.trigger(this.game.currentPlayer);
       this.lastTurnPlayer = this.game.currentPlayer;
+      this.audio.turnChange();
     }
 
     // Background music update

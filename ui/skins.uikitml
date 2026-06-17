@@ -15,6 +15,8 @@
     <text name="skin-12" fontSize="0.02" color="#cc66ff" backgroundColor="#220033" padding="0.011" borderRadius="0.012" borderColor="#7733aa" borderWidth="0.002" cursor="pointer">Nebula Dust - Level 25</text>
     <text name="skin-13" fontSize="0.02" color="#ff8844" backgroundColor="#331100" padding="0.011" borderRadius="0.012" borderColor="#cc5522" borderWidth="0.002" cursor="pointer">Starfire - Tournament Win</text>
     <text name="skin-14" fontSize="0.02" color="#2266aa" backgroundColor="#001133" padding="0.011" borderRadius="0.012" borderColor="#114488" borderWidth="0.002" cursor="pointer">Deep Ocean - 3 Tourney Wins</text>
+    <text name="skin-15" fontSize="0.02" color="#44ffaa" backgroundColor="#002211" padding="0.011" borderRadius="0.012" borderColor="#22cc66" borderWidth="0.002" cursor="pointer">Aurora - 200 Moves</text>
+    <text name="skin-16" fontSize="0.02" color="#ff6633" backgroundColor="#331100" padding="0.011" borderRadius="0.012" borderColor="#cc4422" borderWidth="0.002" cursor="pointer">Ember Glow - Level 35</text>
   </container>
   <text name="btn-back" fontSize="0.035" color="#888888" backgroundColor="#222222" padding="0.02" borderRadius="0.015" borderColor="#666666" borderWidth="0.002" hover-backgroundColor="#444444" cursor="pointer" textAlign="center" marginTop="0.015">BACK</text>
 </container>

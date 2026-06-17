@@ -285,6 +285,44 @@
               "cursor": "pointer"
             },
             "dataUid": "uid-17"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Aurora - 200 Moves"
+            ],
+            "properties": {
+              "name": "skin-15",
+              "fontsize": "0.02",
+              "color": "#44ffaa",
+              "backgroundcolor": "#002211",
+              "padding": "0.011",
+              "borderradius": "0.012",
+              "bordercolor": "#22cc66",
+              "borderwidth": "0.002",
+              "cursor": "pointer"
+            },
+            "dataUid": "uid-18"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Ember Glow - Level 35"
+            ],
+            "properties": {
+              "name": "skin-16",
+              "fontsize": "0.02",
+              "color": "#ff6633",
+              "backgroundcolor": "#331100",
+              "padding": "0.011",
+              "borderradius": "0.012",
+              "bordercolor": "#cc4422",
+              "borderwidth": "0.002",
+              "cursor": "pointer"
+            },
+            "dataUid": "uid-19"
           }
         ],
         "properties": {
@@ -315,7 +353,7 @@
           "textalign": "center",
           "margintop": "0.015"
         },
-        "dataUid": "uid-18"
+        "dataUid": "uid-20"
       }
     ],
     "properties": {
@@ -340,7 +378,7 @@
         "column": 0
       },
       "end": {
-        "line": 19,
+        "line": 21,
         "column": 12
       }
     },
@@ -360,7 +398,7 @@
         "column": 2
       },
       "end": {
-        "line": 17,
+        "line": 19,
         "column": 14
       }
     },
@@ -506,11 +544,31 @@
     },
     "uid-18": {
       "start": {
+        "line": 17,
+        "column": 4
+      },
+      "end": {
+        "line": 17,
+        "column": 204
+      }
+    },
+    "uid-19": {
+      "start": {
         "line": 18,
-        "column": 2
+        "column": 4
       },
       "end": {
         "line": 18,
+        "column": 207
+      }
+    },
+    "uid-20": {
+      "start": {
+        "line": 20,
+        "column": 2
+      },
+      "end": {
+        "line": 20,
         "column": 258
       }
     }
