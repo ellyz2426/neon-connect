@@ -27,6 +27,15 @@ import {
   Group,
   PlaneGeometry,
   Object3D,
+  BufferGeometry,
+  Float32BufferAttribute,
+  PointsMaterial,
+  Points,
+  Line,
+  LineBasicMaterial,
+  AdditiveBlending,
+  CatmullRomCurve3,
+  TubeGeometry,
 } from 'three';
 
 // ─── Constants ──────────────────────────────────────────────────────
@@ -386,6 +395,14 @@ class AudioManager {
   }
 
   drop() { this.tone(440, 0.15, 'sine'); setTimeout(() => this.tone(660, 0.1, 'sine'), 80); }
+  dropMusical(col: number, totalCols: number) {
+    // Pentatonic scale mapped to columns for a musical feel
+    const pentatonic = [261.6, 293.7, 329.6, 392.0, 440.0, 523.3, 587.3, 659.3, 784.0];
+    const idx = Math.min(col, pentatonic.length - 1);
+    const freq = pentatonic[idx % pentatonic.length];
+    this.tone(freq, 0.18, 'sine');
+    setTimeout(() => this.tone(freq * 1.5, 0.1, 'sine'), 80);
+  }
   select() { this.tone(880, 0.08, 'square'); }
   win() { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => this.tone(f, 0.3, 'sine'), i * 120)); }
   lose() { [400, 350, 300, 250].forEach((f, i) => setTimeout(() => this.tone(f, 0.3, 'sawtooth'), i * 150)); }
@@ -419,6 +436,7 @@ class GameManager {
   achPage = 0;
   pendingToast = '';
   toastTimer = 0;
+  hintCol = -1; // for practice mode hints
 
   get cols(): number { return this.mode === 'five' ? COLS_BIG : COLS_STD; }
   get rows(): number { return this.mode === 'five' ? ROWS_BIG : ROWS_STD; }
@@ -557,12 +575,201 @@ class GameManager {
     return 'F';
   }
 
+  getHintCol(): number {
+    if (this.phase !== 'playing' || this.currentPlayer !== 1) return -1;
+    // Use medium-depth AI to suggest a move for the player
+    const hint = aiMove(this.board.clone(), 'medium');
+    return hint;
+  }
+
   getXpEarned(): number {
     if (this.winner === 1) {
       const base = this.difficulty === 'easy' ? 30 : this.difficulty === 'medium' ? 60 : 100;
       return base + Math.floor(this.moveCount * 2);
     }
     return this.winner === 2 ? 15 : 25;
+  }
+}
+
+// ─── Particle System ────────────────────────────────────────────────
+interface Particle { x: number; y: number; z: number; vx: number; vy: number; vz: number; life: number; maxLife: number; }
+
+class ParticleSystem {
+  private particles: Particle[] = [];
+  private points: Points;
+  private geo: BufferGeometry;
+  private maxParticles = 500;
+  private positions: Float32Array;
+  private colors: Float32Array;
+  private sizes: Float32Array;
+
+  constructor(scene: { add: (o: any) => void }) {
+    this.positions = new Float32Array(this.maxParticles * 3);
+    this.colors = new Float32Array(this.maxParticles * 3);
+    this.sizes = new Float32Array(this.maxParticles);
+    this.geo = new BufferGeometry();
+    this.geo.setAttribute('position', new Float32BufferAttribute(this.positions, 3));
+    this.geo.setAttribute('color', new Float32BufferAttribute(this.colors, 3));
+    this.geo.setAttribute('size', new Float32BufferAttribute(this.sizes, 1));
+    const mat = new PointsMaterial({ size: 0.03, vertexColors: true, transparent: true, opacity: 0.8, blending: AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+    this.points = new Points(this.geo, mat);
+    this.points.frustumCulled = false;
+    scene.add(this.points);
+  }
+
+  emit(x: number, y: number, z: number, count: number, color: Color, spread = 0.5, speed = 1, life = 1) {
+    for (let i = 0; i < count; i++) {
+      if (this.particles.length >= this.maxParticles) break;
+      const angle = Math.random() * Math.PI * 2;
+      const elev = (Math.random() - 0.3) * Math.PI;
+      const spd = speed * (0.3 + Math.random() * 0.7);
+      this.particles.push({
+        x: x + (Math.random() - 0.5) * spread * 0.1,
+        y: y + (Math.random() - 0.5) * spread * 0.1,
+        z: z + (Math.random() - 0.5) * spread * 0.1,
+        vx: Math.cos(angle) * Math.cos(elev) * spd,
+        vy: Math.sin(elev) * spd * 1.5 + 0.5,
+        vz: Math.sin(angle) * Math.cos(elev) * spd * 0.5,
+        life, maxLife: life,
+      });
+    }
+  }
+
+  emitDropSplash(x: number, y: number, z: number, color: Color) {
+    this.emit(x, y, z, 15, color, 0.1, 0.6, 0.6);
+  }
+
+  emitWinCelebration(cells: { x: number; y: number; z: number }[], color: Color) {
+    for (const c of cells) {
+      this.emit(c.x, c.y, c.z, 20, color, 0.15, 1.2, 1.5);
+    }
+    // Extra burst at center of win
+    if (cells.length > 0) {
+      const cx = cells.reduce((s, c) => s + c.x, 0) / cells.length;
+      const cy = cells.reduce((s, c) => s + c.y, 0) / cells.length;
+      const cz = cells.reduce((s, c) => s + c.z, 0) / cells.length;
+      this.emit(cx, cy, cz, 40, color, 0.3, 1.5, 2);
+    }
+  }
+
+  update(delta: number, themeColor: Color) {
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.x += p.vx * delta; p.y += p.vy * delta; p.z += p.vz * delta;
+      p.vy -= 1.5 * delta; // gravity
+      p.life -= delta;
+      if (p.life <= 0) { this.particles.splice(i, 1); }
+    }
+    // Update buffers
+    for (let i = 0; i < this.maxParticles; i++) {
+      if (i < this.particles.length) {
+        const p = this.particles[i];
+        const t = p.life / p.maxLife;
+        this.positions[i * 3] = p.x;
+        this.positions[i * 3 + 1] = p.y;
+        this.positions[i * 3 + 2] = p.z;
+        this.colors[i * 3] = themeColor.r * t;
+        this.colors[i * 3 + 1] = themeColor.g * t;
+        this.colors[i * 3 + 2] = themeColor.b * t;
+        this.sizes[i] = 0.03 * t;
+      } else {
+        this.positions[i * 3] = 0;
+        this.positions[i * 3 + 1] = -100;
+        this.positions[i * 3 + 2] = 0;
+        this.sizes[i] = 0;
+      }
+    }
+    this.geo.attributes.position.needsUpdate = true;
+    this.geo.attributes.color.needsUpdate = true;
+    this.geo.attributes.size.needsUpdate = true;
+  }
+}
+
+// ─── Ambient Particle System ────────────────────────────────────────
+class AmbientParticles {
+  private points: Points;
+  private geo: BufferGeometry;
+  private count = 120;
+  private positions: Float32Array;
+  private velocities: Float32Array;
+  private phases: Float32Array;
+
+  constructor(scene: { add: (o: any) => void }, color: number) {
+    this.positions = new Float32Array(this.count * 3);
+    this.velocities = new Float32Array(this.count * 3);
+    this.phases = new Float32Array(this.count);
+    for (let i = 0; i < this.count; i++) {
+      this.positions[i * 3] = (Math.random() - 0.5) * 12;
+      this.positions[i * 3 + 1] = Math.random() * 5;
+      this.positions[i * 3 + 2] = (Math.random() - 0.5) * 12 - 2;
+      this.velocities[i * 3] = (Math.random() - 0.5) * 0.1;
+      this.velocities[i * 3 + 1] = 0.02 + Math.random() * 0.06;
+      this.velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.1;
+      this.phases[i] = Math.random() * Math.PI * 2;
+    }
+    this.geo = new BufferGeometry();
+    this.geo.setAttribute('position', new Float32BufferAttribute(this.positions, 3));
+    const mat = new PointsMaterial({ color, size: 0.02, transparent: true, opacity: 0.4, blending: AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+    this.points = new Points(this.geo, mat);
+    this.points.frustumCulled = false;
+    scene.add(this.points);
+  }
+
+  update(time: number) {
+    for (let i = 0; i < this.count; i++) {
+      const phase = this.phases[i];
+      this.positions[i * 3] += Math.sin(time * 0.3 + phase) * 0.002;
+      this.positions[i * 3 + 1] += this.velocities[i * 3 + 1] * 0.016;
+      this.positions[i * 3 + 2] += Math.cos(time * 0.2 + phase) * 0.002;
+      // Wrap around vertically
+      if (this.positions[i * 3 + 1] > 6) {
+        this.positions[i * 3 + 1] = -0.5;
+        this.positions[i * 3] = (Math.random() - 0.5) * 12;
+        this.positions[i * 3 + 2] = (Math.random() - 0.5) * 12 - 2;
+      }
+    }
+    this.geo.attributes.position.needsUpdate = true;
+  }
+
+  setColor(color: number) {
+    (this.points.material as PointsMaterial).color.set(color);
+  }
+}
+
+// ─── Win Line Renderer ──────────────────────────────────────────────
+class WinLineRenderer {
+  private mesh: Mesh | null = null;
+  private scene: { add: (o: any) => void; remove: (o: any) => void };
+  private time = 0;
+
+  constructor(scene: { add: (o: any) => void; remove: (o: any) => void }) {
+    this.scene = scene;
+  }
+
+  show(positions: Vector3[], color: Color) {
+    this.clear();
+    if (positions.length < 2) return;
+    const curve = new CatmullRomCurve3(positions, false, 'centripetal');
+    const geo = new TubeGeometry(curve, 32, 0.012, 8, false);
+    const mat = new MeshStandardMaterial({
+      color, emissive: color, emissiveIntensity: 2,
+      transparent: true, opacity: 0.9,
+    });
+    this.mesh = new Mesh(geo, mat);
+    this.scene.add(this.mesh);
+  }
+
+  update(delta: number) {
+    if (!this.mesh) return;
+    this.time += delta;
+    const mat = this.mesh.material as MeshStandardMaterial;
+    mat.emissiveIntensity = 1.5 + Math.sin(this.time * 4) * 0.8;
+    mat.opacity = 0.7 + Math.sin(this.time * 3) * 0.2;
+  }
+
+  clear() {
+    if (this.mesh) { this.scene.remove(this.mesh); this.mesh = null; }
+    this.time = 0;
   }
 }
 
@@ -578,6 +785,15 @@ class BoardRenderer {
   private gridMat!: MeshStandardMaterial;
   private slotMats: MeshStandardMaterial[] = [];
   private floorMesh!: Mesh;
+  private ghostDisc: Mesh | null = null;
+  private ghostMat!: MeshStandardMaterial;
+  private shakeIntensity = 0;
+  private shakeOffset = new Vector3();
+  private originalBoardY = BOARD_Y;
+  private discSpinTargets: { mesh: Mesh; speed: number; }[] = [];
+  private gridPulseTime = 0;
+  private gridLines: Mesh[] = [];
+  private gridLineMat!: MeshStandardMaterial;
 
   init(world: World, game: GameManager) {
     this.world = world;
@@ -587,6 +803,12 @@ class BoardRenderer {
     this.buildBoard(game);
     this.buildFloor(world);
     this.buildEnvironment(world);
+    // Ghost disc for column preview
+    const ghostGeo = new TorusGeometry(DISC_R, DISC_TUBE, 16, 32);
+    this.ghostMat = new MeshStandardMaterial({ color: 0x00ffff, emissive: new Color(0x00ffff), emissiveIntensity: 0.4, transparent: true, opacity: 0, metalness: 0.2, roughness: 0.6 });
+    this.ghostDisc = new Mesh(ghostGeo, this.ghostMat);
+    this.ghostDisc.visible = false;
+    this.boardGroup.add(this.ghostDisc);
   }
 
   private buildFloor(world: World) {
@@ -601,15 +823,18 @@ class BoardRenderer {
 
   private buildEnvironment(world: World) {
     const theme = THEMES[save.theme];
-    // Grid lines on floor
-    const lineMat = new MeshStandardMaterial({ color: theme.grid, emissive: new Color(theme.grid), emissiveIntensity: 0.5, transparent: true, opacity: 0.3 });
+    // Grid lines on floor — stored for pulsing
+    this.gridLineMat = new MeshStandardMaterial({ color: theme.grid, emissive: new Color(theme.grid), emissiveIntensity: 0.5, transparent: true, opacity: 0.3 });
+    this.gridLines = [];
     for (let i = -5; i <= 5; i++) {
-      const hLine = new Mesh(new BoxGeometry(30, 0.005, 0.02), lineMat);
+      const hLine = new Mesh(new BoxGeometry(30, 0.005, 0.02), this.gridLineMat);
       hLine.position.set(0, 0.005, i * 3);
       world.scene.add(hLine);
-      const vLine = new Mesh(new BoxGeometry(0.02, 0.005, 30), lineMat);
+      this.gridLines.push(hLine);
+      const vLine = new Mesh(new BoxGeometry(0.02, 0.005, 30), this.gridLineMat);
       vLine.position.set(i * 3, 0.005, 0);
       world.scene.add(vLine);
+      this.gridLines.push(vLine);
     }
     // Accent pillars
     const pillarMat = new MeshStandardMaterial({ color: theme.grid, emissive: new Color(theme.grid), emissiveIntensity: 0.4, transparent: true, opacity: 0.4 });
@@ -628,6 +853,7 @@ class BoardRenderer {
     this.columnHitboxes.forEach(h => { if (h.entity?.object3D) h.entity.object3D.visible = false; });
     this.columnHitboxes = [];
     this.winGlows = [];
+    this.discSpinTargets = [];
 
     const { cols, rows } = game;
     const theme = THEMES[save.theme];
@@ -709,6 +935,38 @@ class BoardRenderer {
     }
   }
 
+  showGhost(col: number, row: number, player: CellVal, game: GameManager) {
+    if (!this.ghostDisc) return;
+    const w = game.cols * CELL;
+    const x = col * CELL - w / 2 + CELL / 2;
+    const y = row * CELL;
+    this.ghostDisc.position.set(x, y, 0.01);
+    const clr = player === 1 ? SKINS[save.equippedSkin].color : 0xff44ff;
+    this.ghostMat.color.set(clr);
+    this.ghostMat.emissive.set(clr);
+    this.ghostMat.opacity = 0.25;
+    this.ghostMat.emissiveIntensity = 0.3;
+    this.ghostDisc.visible = true;
+  }
+
+  hideGhost() {
+    if (this.ghostDisc) this.ghostDisc.visible = false;
+  }
+
+  triggerShake(intensity = 0.015) {
+    this.shakeIntensity = intensity;
+  }
+
+  getDiscWorldPos(col: number, row: number, game: GameManager): Vector3 {
+    const w = game.cols * CELL;
+    const x = col * CELL - w / 2 + CELL / 2;
+    return new Vector3(
+      this.boardGroup.position.x + x,
+      this.boardGroup.position.y + row * CELL,
+      this.boardGroup.position.z + 0.01
+    );
+  }
+
   clearHighlight() {
     this.columnHighlights.forEach(hl => { (hl.material as MeshStandardMaterial).opacity = 0; });
   }
@@ -730,6 +988,8 @@ class BoardRenderer {
     if (animate) {
       this.dropAnims.push({ col, row, player, mesh, targetY });
     }
+    // Add gentle spin
+    this.discSpinTargets.push({ mesh, speed: (0.05 + Math.random() * 0.08) * (Math.random() > 0.5 ? 1 : -1) });
     return mesh;
   }
 
@@ -774,6 +1034,36 @@ class BoardRenderer {
       g.scale.set(s, s, s);
       (g.material as MeshStandardMaterial).opacity = 0.4 + 0.3 * Math.sin(t + i);
     });
+    // Board shake
+    if (this.shakeIntensity > 0) {
+      this.shakeOffset.set(
+        (Math.random() - 0.5) * this.shakeIntensity,
+        (Math.random() - 0.5) * this.shakeIntensity,
+        0
+      );
+      this.boardGroup.position.y = this.originalBoardY + this.shakeOffset.y;
+      this.boardGroup.position.x = this.shakeOffset.x;
+      this.shakeIntensity *= 0.85;
+      if (this.shakeIntensity < 0.0005) {
+        this.shakeIntensity = 0;
+        this.boardGroup.position.set(0, this.originalBoardY, BOARD_Z);
+      }
+    }
+    // Grid line pulse
+    this.gridPulseTime += delta;
+    if (this.gridLineMat) {
+      const pulse = 0.25 + 0.08 * Math.sin(this.gridPulseTime * 1.5);
+      this.gridLineMat.opacity = pulse;
+      this.gridLineMat.emissiveIntensity = 0.4 + 0.2 * Math.sin(this.gridPulseTime * 1.2);
+    }
+    // Ghost disc pulse
+    if (this.ghostDisc && this.ghostDisc.visible) {
+      this.ghostMat.opacity = 0.2 + 0.08 * Math.sin(t * 2);
+    }
+    // Disc subtle rotation
+    for (const spin of this.discSpinTargets) {
+      spin.mesh.rotation.z += spin.speed * delta;
+    }
   }
 
   isDropping(): boolean { return this.dropAnims.length > 0; }
@@ -985,6 +1275,8 @@ class UIManager {
     this.game.difficulty = diff;
     this.hideAll();
     this.renderer.clearWinGlows();
+    this.renderer.hideGhost();
+    this.game.hintCol = -1;
     this.game.startGame(this.game.mode, diff);
     this.renderer.buildBoard(this.game);
 
@@ -1245,12 +1537,20 @@ class GameLoopSystem extends createSystem({
   private hudUpdateTimer = 0;
   private docsReady = false;
   private initDone = false;
+  private particles!: ParticleSystem;
+  private ambient!: AmbientParticles;
+  private winLine!: WinLineRenderer;
+  private hintActive = false;
+  private hintFlashTimer = 0;
 
-  setRefs(refs: { game: GameManager; boardRenderer: BoardRenderer; uiManager: UIManager; audio: AudioManager; }) {
+  setRefs(refs: { game: GameManager; boardRenderer: BoardRenderer; uiManager: UIManager; audio: AudioManager; particles: ParticleSystem; ambient: AmbientParticles; winLine: WinLineRenderer; }) {
     this.game = refs.game;
     this.boardRenderer = refs.boardRenderer;
     this.uiManager = refs.uiManager;
     this.audio = refs.audio;
+    this.particles = refs.particles;
+    this.ambient = refs.ambient;
+    this.winLine = refs.winLine;
   }
 
   update(delta: number, time: number) {
@@ -1275,7 +1575,22 @@ class GameLoopSystem extends createSystem({
     // Update board renderer
     this.boardRenderer.update(delta);
 
-    if (this.game.phase !== 'playing') return;
+    // Update particles
+    const theme = THEMES[save.theme];
+    this.particles.update(delta, new Color(theme.grid));
+    this.ambient.update(time);
+    this.winLine.update(delta);
+
+    // Hint flash
+    if (this.hintActive) {
+      this.hintFlashTimer -= delta;
+      if (this.hintFlashTimer <= 0) this.hintActive = false;
+    }
+
+    if (this.game.phase !== 'playing') {
+      this.boardRenderer.hideGhost();
+      return;
+    }
 
     // HUD update
     this.hudUpdateTimer -= delta;
@@ -1320,7 +1635,14 @@ class GameLoopSystem extends createSystem({
           const result = this.game.makeMove(col);
           if (result) {
             this.boardRenderer.addDisc(col, result.row, result.player, this.game);
-            this.audio.drop();
+            this.audio.dropMusical(col, this.game.cols);
+            // Schedule particle splash for AI drop
+            const dropTime = (this.game.rows - result.row) * CELL / DROP_SPEED;
+            setTimeout(() => {
+              const pos = this.boardRenderer.getDiscWorldPos(col, result.row, this.game);
+              this.particles.emitDropSplash(pos.x, pos.y, pos.z, new Color(0xff44ff));
+              this.boardRenderer.triggerShake(0.008);
+            }, dropTime * 1000);
           }
         }
         this.game.aiThinking = false;
@@ -1356,8 +1678,26 @@ class GameLoopSystem extends createSystem({
     this.hoveredCol = newHovered;
     if (newHovered >= 0) {
       this.boardRenderer.highlightColumn(newHovered, this.game.currentPlayer);
+      // Show ghost disc at landing row
+      const topRow = this.game.board.topRow(newHovered);
+      const landRow = topRow + 1;
+      if (landRow < this.game.rows) {
+        this.boardRenderer.showGhost(newHovered, landRow, this.game.currentPlayer, this.game);
+      } else {
+        this.boardRenderer.hideGhost();
+      }
+    } else if (this.hintActive && this.game.hintCol >= 0) {
+      // Show hint ghost
+      const hintCol = this.game.hintCol;
+      const topRow = this.game.board.topRow(hintCol);
+      const landRow = topRow + 1;
+      if (landRow < this.game.rows) {
+        this.boardRenderer.showGhost(hintCol, landRow, this.game.currentPlayer, this.game);
+        this.boardRenderer.highlightColumn(hintCol, this.game.currentPlayer);
+      }
     } else {
       this.boardRenderer.clearHighlight();
+      this.boardRenderer.hideGhost();
     }
   }
 
@@ -1383,6 +1723,18 @@ class GameLoopSystem extends createSystem({
           }
         }
         this.audio.popout();
+      }
+    }
+
+    // Hint in practice mode
+    if (keyJustPressed('KeyH') && this.game.phase === 'playing' && this.game.mode === 'practice') {
+      const hint = this.game.getHintCol();
+      if (hint >= 0) {
+        this.game.hintCol = hint;
+        this.hintActive = true;
+        this.hintFlashTimer = 3; // show hint for 3 seconds
+        this.audio.select();
+        this.uiManager.showToast(`Hint: Column ${hint + 1}`);
       }
     }
 
@@ -1436,7 +1788,18 @@ class GameLoopSystem extends createSystem({
     if (!result) return;
 
     this.boardRenderer.addDisc(col, result.row, result.player, this.game);
-    this.audio.drop();
+    this.audio.dropMusical(col, this.game.cols);
+    this.boardRenderer.hideGhost();
+    this.hintActive = false;
+
+    // Schedule particle splash and shake when disc lands
+    const dropTime = (this.game.rows - result.row) * CELL / DROP_SPEED;
+    setTimeout(() => {
+      const pos = this.boardRenderer.getDiscWorldPos(col, result.row, this.game);
+      const clr = result.player === 1 ? new Color(SKINS[save.equippedSkin].color) : new Color(0xff44ff);
+      this.particles.emitDropSplash(pos.x, pos.y, pos.z, clr);
+      this.boardRenderer.triggerShake(0.01);
+    }, dropTime * 1000);
 
     // Check if game ended (makeMove can set phase to gameover)
     if ((this.game.phase as string) === 'gameover') {
@@ -1449,6 +1812,18 @@ class GameLoopSystem extends createSystem({
     setTimeout(() => {
       if (this.game.winCells.length > 0) {
         this.boardRenderer.showWin(this.game.winCells, this.game);
+        // Win celebration particles
+        const winPositions = this.game.winCells.map(c =>
+          this.boardRenderer.getDiscWorldPos(c.col, c.row, this.game)
+        );
+        const winColor = this.game.winner === 1 ? new Color(SKINS[save.equippedSkin].color) : new Color(0xff44ff);
+        this.particles.emitWinCelebration(
+          winPositions.map(p => ({ x: p.x, y: p.y, z: p.z })),
+          winColor
+        );
+        // Draw win line
+        this.winLine.show(winPositions, winColor);
+        this.boardRenderer.triggerShake(0.025);
       }
 
       if (this.game.winner === 1) this.audio.win();
@@ -1504,6 +1879,11 @@ async function main() {
   const boardRenderer = new BoardRenderer();
   boardRenderer.init(world, game);
 
+  // Particle systems
+  const particles = new ParticleSystem(world.scene);
+  const ambient = new AmbientParticles(world.scene, theme.grid);
+  const winLine = new WinLineRenderer(world.scene);
+
   // Register game loop system BEFORE UI (UI init may throw)
   world.registerSystem(GameLoopSystem);
 
@@ -1511,7 +1891,7 @@ async function main() {
   uiManager.init(world, game, audio, boardRenderer);
 
   const loop = world.getSystem(GameLoopSystem)!;
-  loop.setRefs({ game, boardRenderer, uiManager, audio });
+  loop.setRefs({ game, boardRenderer, uiManager, audio, particles, ambient, winLine });
 }
 
 main().catch(console.error);

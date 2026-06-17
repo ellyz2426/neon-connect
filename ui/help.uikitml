@@ -10,6 +10,7 @@
     <text fontSize="0.022" color="#cccccc">Mouse: Hover to highlight column</text>
     <text fontSize="0.022" color="#cccccc">Click: Drop disc in column</text>
     <text fontSize="0.022" color="#cccccc">U: Undo (Practice mode)</text>
+    <text fontSize="0.022" color="#cccccc">H: Hint (Practice mode)</text>
     <text fontSize="0.022" color="#cccccc">ESC/P: Pause game</text>
     <text fontSize="0.022" color="#cccccc">R: Rematch (game over)</text>
   </container>
