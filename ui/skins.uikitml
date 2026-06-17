@@ -1,16 +1,18 @@
-<container flexDirection="column" alignItems="center" gap="0.012" padding="0.05" backgroundColor="#000a18ee" borderRadius="0.04" borderColor="#ff8844" borderWidth="0.003" width="1.0" height="1.4">
+<container flexDirection="column" alignItems="center" gap="0.01" padding="0.05" backgroundColor="#000a18ee" borderRadius="0.04" borderColor="#ff8844" borderWidth="0.003" width="1.0" height="1.5">
   <text fontSize="0.05" fontWeight="bold" color="#ff8844">DISC SKINS</text>
-  <container flexDirection="column" gap="0.01" width="0.9" marginTop="0.01">
-    <text name="skin-1" fontSize="0.023" color="#00ffff" backgroundColor="#003355" padding="0.015" borderRadius="0.012" borderColor="#00ccff" borderWidth="0.002" cursor="pointer">Neon Cyan [EQUIPPED]</text>
-    <text name="skin-2" fontSize="0.023" color="#ff6600" backgroundColor="#331100" padding="0.015" borderRadius="0.012" borderColor="#663300" borderWidth="0.002" cursor="pointer">Solar Flare - 50 Wins</text>
-    <text name="skin-3" fontSize="0.023" color="#ff44ff" backgroundColor="#330033" padding="0.015" borderRadius="0.012" borderColor="#663366" borderWidth="0.002" cursor="pointer">Plasma Pink - 5K Score</text>
-    <text name="skin-4" fontSize="0.023" color="#44ccff" backgroundColor="#002233" padding="0.015" borderRadius="0.012" borderColor="#225566" borderWidth="0.002" cursor="pointer">Frost Ring - 10 Games</text>
-    <text name="skin-5" fontSize="0.023" color="#44ff44" backgroundColor="#003300" padding="0.015" borderRadius="0.012" borderColor="#226622" borderWidth="0.002" cursor="pointer">Toxic Green - x5 Combo</text>
-    <text name="skin-6" fontSize="0.023" color="#ffcc00" backgroundColor="#332200" padding="0.015" borderRadius="0.012" borderColor="#665500" borderWidth="0.002" cursor="pointer">Royal Gold - Perfect Game</text>
-    <text name="skin-7" fontSize="0.023" color="#aa44ff" backgroundColor="#220044" padding="0.015" borderRadius="0.012" borderColor="#553388" borderWidth="0.002" cursor="pointer">Void Purple - 80% Win Rate</text>
-    <text name="skin-8" fontSize="0.023" color="#ff4422" backgroundColor="#330000" padding="0.015" borderRadius="0.012" borderColor="#662200" borderWidth="0.002" cursor="pointer">Inferno - All Modes</text>
-    <text name="skin-9" fontSize="0.023" color="#2244aa" backgroundColor="#111133" padding="0.015" borderRadius="0.012" borderColor="#334488" borderWidth="0.002" cursor="pointer">Midnight - Level 15</text>
-    <text name="skin-10" fontSize="0.023" color="#ffffff" backgroundColor="#222233" padding="0.015" borderRadius="0.012" borderColor="#8888aa" borderWidth="0.002" cursor="pointer">Holo Prism - 25 Wins</text>
+  <container flexDirection="column" gap="0.008" width="0.9" marginTop="0.01">
+    <text name="skin-1" fontSize="0.022" color="#00ffff" backgroundColor="#003355" padding="0.013" borderRadius="0.012" borderColor="#00ccff" borderWidth="0.002" cursor="pointer">Neon Cyan [EQUIPPED]</text>
+    <text name="skin-2" fontSize="0.022" color="#ff6600" backgroundColor="#331100" padding="0.013" borderRadius="0.012" borderColor="#663300" borderWidth="0.002" cursor="pointer">Solar Flare - 50 Wins</text>
+    <text name="skin-3" fontSize="0.022" color="#ff44ff" backgroundColor="#330033" padding="0.013" borderRadius="0.012" borderColor="#663366" borderWidth="0.002" cursor="pointer">Plasma Pink - 5K Score</text>
+    <text name="skin-4" fontSize="0.022" color="#44ccff" backgroundColor="#002233" padding="0.013" borderRadius="0.012" borderColor="#225566" borderWidth="0.002" cursor="pointer">Frost Ring - 10 Games</text>
+    <text name="skin-5" fontSize="0.022" color="#44ff44" backgroundColor="#003300" padding="0.013" borderRadius="0.012" borderColor="#226622" borderWidth="0.002" cursor="pointer">Toxic Green - x5 Combo</text>
+    <text name="skin-6" fontSize="0.022" color="#ffcc00" backgroundColor="#332200" padding="0.013" borderRadius="0.012" borderColor="#665500" borderWidth="0.002" cursor="pointer">Royal Gold - Perfect Game</text>
+    <text name="skin-7" fontSize="0.022" color="#aa44ff" backgroundColor="#220044" padding="0.013" borderRadius="0.012" borderColor="#553388" borderWidth="0.002" cursor="pointer">Void Purple - 80% Win Rate</text>
+    <text name="skin-8" fontSize="0.022" color="#ff4422" backgroundColor="#330000" padding="0.013" borderRadius="0.012" borderColor="#662200" borderWidth="0.002" cursor="pointer">Inferno - All Modes</text>
+    <text name="skin-9" fontSize="0.022" color="#2244aa" backgroundColor="#111133" padding="0.013" borderRadius="0.012" borderColor="#334488" borderWidth="0.002" cursor="pointer">Midnight - Level 15</text>
+    <text name="skin-10" fontSize="0.022" color="#ffffff" backgroundColor="#222233" padding="0.013" borderRadius="0.012" borderColor="#8888aa" borderWidth="0.002" cursor="pointer">Holo Prism - 25 Wins</text>
+    <text name="skin-11" fontSize="0.022" color="#aaeeff" backgroundColor="#002233" padding="0.013" borderRadius="0.012" borderColor="#44aacc" borderWidth="0.002" cursor="pointer">Crystal Ice - 100 Moves</text>
+    <text name="skin-12" fontSize="0.022" color="#cc66ff" backgroundColor="#220033" padding="0.013" borderRadius="0.012" borderColor="#7733aa" borderWidth="0.002" cursor="pointer">Nebula Dust - Level 25</text>
   </container>
   <text name="btn-back" fontSize="0.035" color="#888888" backgroundColor="#222222" padding="0.02" borderRadius="0.015" borderColor="#666666" borderWidth="0.002" hover-backgroundColor="#444444" cursor="pointer" textAlign="center" marginTop="0.02">BACK</text>
 </container>

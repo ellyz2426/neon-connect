@@ -28,10 +28,10 @@
             ],
             "properties": {
               "name": "skin-1",
-              "fontsize": "0.023",
+              "fontsize": "0.022",
               "color": "#00ffff",
               "backgroundcolor": "#003355",
-              "padding": "0.015",
+              "padding": "0.013",
               "borderradius": "0.012",
               "bordercolor": "#00ccff",
               "borderwidth": "0.002",
@@ -47,10 +47,10 @@
             ],
             "properties": {
               "name": "skin-2",
-              "fontsize": "0.023",
+              "fontsize": "0.022",
               "color": "#ff6600",
               "backgroundcolor": "#331100",
-              "padding": "0.015",
+              "padding": "0.013",
               "borderradius": "0.012",
               "bordercolor": "#663300",
               "borderwidth": "0.002",
@@ -66,10 +66,10 @@
             ],
             "properties": {
               "name": "skin-3",
-              "fontsize": "0.023",
+              "fontsize": "0.022",
               "color": "#ff44ff",
               "backgroundcolor": "#330033",
-              "padding": "0.015",
+              "padding": "0.013",
               "borderradius": "0.012",
               "bordercolor": "#663366",
               "borderwidth": "0.002",
@@ -85,10 +85,10 @@
             ],
             "properties": {
               "name": "skin-4",
-              "fontsize": "0.023",
+              "fontsize": "0.022",
               "color": "#44ccff",
               "backgroundcolor": "#002233",
-              "padding": "0.015",
+              "padding": "0.013",
               "borderradius": "0.012",
               "bordercolor": "#225566",
               "borderwidth": "0.002",
@@ -104,10 +104,10 @@
             ],
             "properties": {
               "name": "skin-5",
-              "fontsize": "0.023",
+              "fontsize": "0.022",
               "color": "#44ff44",
               "backgroundcolor": "#003300",
-              "padding": "0.015",
+              "padding": "0.013",
               "borderradius": "0.012",
               "bordercolor": "#226622",
               "borderwidth": "0.002",
@@ -123,10 +123,10 @@
             ],
             "properties": {
               "name": "skin-6",
-              "fontsize": "0.023",
+              "fontsize": "0.022",
               "color": "#ffcc00",
               "backgroundcolor": "#332200",
-              "padding": "0.015",
+              "padding": "0.013",
               "borderradius": "0.012",
               "bordercolor": "#665500",
               "borderwidth": "0.002",
@@ -142,10 +142,10 @@
             ],
             "properties": {
               "name": "skin-7",
-              "fontsize": "0.023",
+              "fontsize": "0.022",
               "color": "#aa44ff",
               "backgroundcolor": "#220044",
-              "padding": "0.015",
+              "padding": "0.013",
               "borderradius": "0.012",
               "bordercolor": "#553388",
               "borderwidth": "0.002",
@@ -161,10 +161,10 @@
             ],
             "properties": {
               "name": "skin-8",
-              "fontsize": "0.023",
+              "fontsize": "0.022",
               "color": "#ff4422",
               "backgroundcolor": "#330000",
-              "padding": "0.015",
+              "padding": "0.013",
               "borderradius": "0.012",
               "bordercolor": "#662200",
               "borderwidth": "0.002",
@@ -180,10 +180,10 @@
             ],
             "properties": {
               "name": "skin-9",
-              "fontsize": "0.023",
+              "fontsize": "0.022",
               "color": "#2244aa",
               "backgroundcolor": "#111133",
-              "padding": "0.015",
+              "padding": "0.013",
               "borderradius": "0.012",
               "bordercolor": "#334488",
               "borderwidth": "0.002",
@@ -199,21 +199,59 @@
             ],
             "properties": {
               "name": "skin-10",
-              "fontsize": "0.023",
+              "fontsize": "0.022",
               "color": "#ffffff",
               "backgroundcolor": "#222233",
-              "padding": "0.015",
+              "padding": "0.013",
               "borderradius": "0.012",
               "bordercolor": "#8888aa",
               "borderwidth": "0.002",
               "cursor": "pointer"
             },
             "dataUid": "uid-13"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Crystal Ice - 100 Moves"
+            ],
+            "properties": {
+              "name": "skin-11",
+              "fontsize": "0.022",
+              "color": "#aaeeff",
+              "backgroundcolor": "#002233",
+              "padding": "0.013",
+              "borderradius": "0.012",
+              "bordercolor": "#44aacc",
+              "borderwidth": "0.002",
+              "cursor": "pointer"
+            },
+            "dataUid": "uid-14"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Nebula Dust - Level 25"
+            ],
+            "properties": {
+              "name": "skin-12",
+              "fontsize": "0.022",
+              "color": "#cc66ff",
+              "backgroundcolor": "#220033",
+              "padding": "0.013",
+              "borderradius": "0.012",
+              "bordercolor": "#7733aa",
+              "borderwidth": "0.002",
+              "cursor": "pointer"
+            },
+            "dataUid": "uid-15"
           }
         ],
         "properties": {
           "flexdirection": "column",
-          "gap": "0.01",
+          "gap": "0.008",
           "width": "0.9",
           "margintop": "0.01"
         },
@@ -239,20 +277,20 @@
           "textalign": "center",
           "margintop": "0.02"
         },
-        "dataUid": "uid-14"
+        "dataUid": "uid-16"
       }
     ],
     "properties": {
       "flexdirection": "column",
       "alignitems": "center",
-      "gap": "0.012",
+      "gap": "0.01",
       "padding": "0.05",
       "backgroundcolor": "#000a18ee",
       "borderradius": "0.04",
       "bordercolor": "#ff8844",
       "borderwidth": "0.003",
       "width": "1.0",
-      "height": "1.4"
+      "height": "1.5"
     },
     "dataUid": "uid-1"
   },
@@ -264,7 +302,7 @@
         "column": 0
       },
       "end": {
-        "line": 15,
+        "line": 17,
         "column": 12
       }
     },
@@ -284,7 +322,7 @@
         "column": 2
       },
       "end": {
-        "line": 13,
+        "line": 15,
         "column": 14
       }
     },
@@ -390,11 +428,31 @@
     },
     "uid-14": {
       "start": {
+        "line": 13,
+        "column": 4
+      },
+      "end": {
+        "line": 13,
+        "column": 210
+      }
+    },
+    "uid-15": {
+      "start": {
         "line": 14,
-        "column": 2
+        "column": 4
       },
       "end": {
         "line": 14,
+        "column": 209
+      }
+    },
+    "uid-16": {
+      "start": {
+        "line": 16,
+        "column": 2
+      },
+      "end": {
+        "line": 16,
         "column": 257
       }
     }

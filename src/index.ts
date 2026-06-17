@@ -168,6 +168,15 @@ const ACHIEVEMENTS: AchDef[] = [
   { id: 'speed_60', name: 'Minute Man', desc: 'Win in under 60 seconds on Hard', check: () => save.fastestWinMs < 60000 },
   { id: 'daily_25', name: 'Daily Devotion', desc: 'Complete 25 daily challenges', check: () => save.dailyCompleted >= 25 },
   { id: 'moves_2500', name: 'Grand Tactician', desc: 'Make 2500 total moves', check: () => save.totalMoves >= 2500 },
+  { id: 'win_200', name: 'Immortal', desc: 'Win 200 games', check: () => save.wins >= 200 },
+  { id: 'streak_15', name: 'Dominator', desc: '15 wins in a row', check: () => save.bestStreak >= 15 },
+  { id: 'streak_20', name: 'Untouchable', desc: '20 wins in a row', check: () => save.bestStreak >= 20 },
+  { id: 'daily_50', name: 'Daily Legend', desc: 'Complete 50 daily challenges', check: () => save.dailyCompleted >= 50 },
+  { id: 'perfect_10', name: 'Flawless Master', desc: '10 perfect games', check: () => save.perfectGames >= 10 },
+  { id: 'speed_20', name: 'Speed Freak', desc: 'Win in under 20 seconds', check: () => save.fastestWinMs < 20000 },
+  { id: 'play_200', name: 'Obsessed', desc: 'Play 200 games', check: () => save.gamesPlayed >= 200 },
+  { id: 'xp_25000', name: 'XP Overlord', desc: 'Earn 25000 total XP', check: () => save.xp >= 25000 },
+  { id: 'modes_all_5', name: 'Mode Master', desc: 'Win 5 in every mode', check: () => ['classic','timed','blitz','popout','five','daily','practice'].every(m => (save.modeStats[m]?.wins ?? 0) >= 5) },
 ];
 
 // ─── Skins ──────────────────────────────────────────────────────────
@@ -182,6 +191,8 @@ const SKINS = [
   { name: 'Inferno', color: 0xff4422, emissive: 0xaa2211, req: 'All Modes' },
   { name: 'Midnight', color: 0x2244aa, emissive: 0x112266, req: 'Level 15' },
   { name: 'Holo Prism', color: 0xffffff, emissive: 0x88aaff, req: '25 Wins' },
+  { name: 'Crystal Ice', color: 0xaaeeff, emissive: 0x66bbdd, req: '100 Moves' },
+  { name: 'Nebula Dust', color: 0xcc66ff, emissive: 0x8833cc, req: 'Level 25' },
 ];
 
 function skinUnlocked(i: number): boolean {
@@ -195,6 +206,8 @@ function skinUnlocked(i: number): boolean {
   if (i === 7) return ['classic','timed','blitz','popout','five','daily','practice','versus'].every(m => (save.modeStats[m]?.played ?? 0) > 0);
   if (i === 8) return save.level >= 15;
   if (i === 9) return save.wins >= 25;
+  if (i === 10) return save.totalMoves >= 100;
+  if (i === 11) return save.level >= 25;
   return false;
 }
 
@@ -750,6 +763,305 @@ class HoloRings {
       mat.color.set(color);
       mat.emissive.set(color);
     }
+  }
+}
+
+// ─── AI Commentary System ───────────────────────────────────────────
+class AICommentary {
+  private lastTauntTime = 0;
+  private cooldownMs = 8000;
+  private sessionWins = 0;
+  private sessionLosses = 0;
+
+  private TAUNTS_ON_MOVE = [
+    'Interesting choice...', 'Hmm, bold move.', 'I see your plan.',
+    'Predictable.', 'Not bad, human.', 'You may regret that.',
+    'The center is mine.', 'Too slow.', 'Watch and learn.',
+    'A worthy attempt.', 'Calculating...', 'That was expected.',
+  ];
+  private TAUNTS_ON_BLOCK = [
+    'Nice try!', 'Blocked!', 'Not today.', 'I saw that coming.',
+    'Did you think I would miss that?', 'Better luck next time.',
+  ];
+  private TAUNTS_ON_WIN = [
+    'Better luck next time!', 'GG.', 'I am inevitable.',
+    'Rematch?', 'Another one falls.', 'Flawless logic.',
+    'The machine prevails.', 'No contest.', 'Too easy.',
+  ];
+  private TAUNTS_ON_LOSE = [
+    'Well played!', 'Impressive.', 'I underestimated you.',
+    'You got lucky.', 'I demand a rematch!', 'Processing loss...',
+    'Error: defeat not expected.', 'Recalibrating...',
+  ];
+  private TAUNTS_ON_COMBO = [
+    'Double threat? Clever.', 'Creating pressure, I see.',
+    'Setting up traps...', 'Strategic depth detected.',
+  ];
+
+  private canTaunt(): boolean {
+    const now = performance.now();
+    if (now - this.lastTauntTime < this.cooldownMs) return false;
+    this.lastTauntTime = now;
+    return true;
+  }
+
+  private pick(arr: string[]): string {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  onAIMove(blocked: boolean): string | null {
+    if (!this.canTaunt()) return null;
+    if (Math.random() < 0.6) return null; // only taunt 40% of moves
+    if (blocked) return this.pick(this.TAUNTS_ON_BLOCK);
+    return this.pick(this.TAUNTS_ON_MOVE);
+  }
+
+  onGameEnd(aiWon: boolean): string | null {
+    if (aiWon) { this.sessionWins++; return this.pick(this.TAUNTS_ON_WIN); }
+    this.sessionLosses++;
+    return this.pick(this.TAUNTS_ON_LOSE);
+  }
+
+  onCombo(): string | null {
+    if (!this.canTaunt()) return null;
+    if (Math.random() < 0.5) return null;
+    return this.pick(this.TAUNTS_ON_COMBO);
+  }
+}
+
+// ─── Column Number Labels ───────────────────────────────────────────
+class ColumnLabels {
+  private labels: Mesh[] = [];
+  private labelMats: MeshStandardMaterial[] = [];
+  private group: Group;
+
+  constructor(scene: { add: (o: any) => void }, cols: number, boardPos: Vector3) {
+    this.group = new Group();
+    this.build(cols, boardPos);
+    scene.add(this.group);
+  }
+
+  private build(cols: number, boardPos: Vector3) {
+    while (this.group.children.length > 0) this.group.remove(this.group.children[0]);
+    this.labels = [];
+    this.labelMats = [];
+    const w = cols * CELL;
+    // Use small sphere markers as column indicators (avoiding text mesh complexity)
+    for (let c = 0; c < cols; c++) {
+      const mat = new MeshStandardMaterial({
+        color: 0x00ccff, emissive: new Color(0x00ccff),
+        emissiveIntensity: 0.6, transparent: true, opacity: 0.4,
+      });
+      // Small diamond/octahedron shape as column marker
+      const geo = new SphereGeometry(0.015, 4, 4);
+      const marker = new Mesh(geo, mat);
+      const x = c * CELL - w / 2 + CELL / 2;
+      marker.position.set(boardPos.x + x, boardPos.y - CELL * 0.6, boardPos.z + 0.08);
+      marker.rotation.z = Math.PI / 4;
+      this.labels.push(marker);
+      this.labelMats.push(mat);
+      this.group.add(marker);
+    }
+  }
+
+  highlight(col: number, color: number) {
+    for (let c = 0; c < this.labels.length; c++) {
+      const mat = this.labelMats[c];
+      if (c === col) {
+        mat.color.set(color);
+        mat.emissive.set(color);
+        mat.opacity = 0.9;
+        mat.emissiveIntensity = 1.5;
+        this.labels[c].scale.setScalar(1.8);
+      } else {
+        mat.color.set(0x00ccff);
+        mat.emissive.set(0x00ccff);
+        mat.opacity = 0.4;
+        mat.emissiveIntensity = 0.6;
+        this.labels[c].scale.setScalar(1);
+      }
+    }
+  }
+
+  clearHighlight() {
+    for (let c = 0; c < this.labels.length; c++) {
+      const mat = this.labelMats[c];
+      mat.opacity = 0.4;
+      mat.emissiveIntensity = 0.6;
+      this.labels[c].scale.setScalar(1);
+    }
+  }
+
+  rebuild(cols: number, boardPos: Vector3) {
+    this.build(cols, boardPos);
+  }
+
+  update(time: number) {
+    // Subtle float animation
+    for (let c = 0; c < this.labels.length; c++) {
+      this.labels[c].rotation.y = time * 0.5 + c * 0.3;
+    }
+  }
+}
+
+// ─── Disc Bounce Controller ─────────────────────────────────────────
+interface BounceAnim {
+  mesh: Mesh;
+  targetY: number;
+  velocityY: number;
+  bounces: number;
+  done: boolean;
+}
+
+class DiscBounceController {
+  private anims: BounceAnim[] = [];
+  private readonly GRAVITY = -12;
+  private readonly RESTITUTION = 0.35;
+  private readonly MAX_BOUNCES = 3;
+
+  startBounce(mesh: Mesh, targetY: number) {
+    this.anims.push({
+      mesh,
+      targetY,
+      velocityY: 0,
+      bounces: 0,
+      done: false,
+    });
+  }
+
+  update(delta: number): Mesh[] {
+    const landed: Mesh[] = [];
+    for (let i = this.anims.length - 1; i >= 0; i--) {
+      const a = this.anims[i];
+      if (a.done) { this.anims.splice(i, 1); continue; }
+
+      // Apply gravity to velocity
+      a.velocityY += this.GRAVITY * delta;
+      a.mesh.position.y += a.velocityY * delta;
+
+      // Check if hit target
+      if (a.mesh.position.y <= a.targetY) {
+        a.mesh.position.y = a.targetY;
+        a.bounces++;
+        if (a.bounces >= this.MAX_BOUNCES || Math.abs(a.velocityY) < 0.3) {
+          a.done = true;
+          landed.push(a.mesh);
+        } else {
+          // Bounce back up with reduced velocity
+          a.velocityY = Math.abs(a.velocityY) * this.RESTITUTION;
+        }
+      }
+    }
+    return landed;
+  }
+
+  isActive(): boolean { return this.anims.length > 0; }
+}
+
+// ─── Victory Confetti System ────────────────────────────────────────
+interface ConfettiPiece {
+  mesh: Mesh;
+  vx: number; vy: number; vz: number;
+  rotSpeed: Vector3;
+  life: number;
+}
+
+class ConfettiSystem {
+  private pieces: ConfettiPiece[] = [];
+  private scene: { add: (o: any) => void; remove: (o: any) => void };
+  private active = false;
+
+  constructor(scene: { add: (o: any) => void; remove: (o: any) => void }) {
+    this.scene = scene;
+  }
+
+  emit(center: Vector3, count: number, colors: number[]) {
+    this.clear();
+    this.active = true;
+    const geo = new PlaneGeometry(0.02, 0.03);
+    for (let i = 0; i < count; i++) {
+      const color = colors[i % colors.length];
+      const mat = new MeshStandardMaterial({
+        color, emissive: new Color(color), emissiveIntensity: 0.8,
+        transparent: true, opacity: 0.9, side: DoubleSide,
+      });
+      const mesh = new Mesh(geo, mat);
+      mesh.position.copy(center);
+      mesh.position.x += (Math.random() - 0.5) * 0.5;
+      mesh.position.y += Math.random() * 0.3;
+      mesh.position.z += (Math.random() - 0.5) * 0.3;
+      this.scene.add(mesh);
+      this.pieces.push({
+        mesh,
+        vx: (Math.random() - 0.5) * 2,
+        vy: 2 + Math.random() * 3,
+        vz: (Math.random() - 0.5) * 1.5,
+        rotSpeed: new Vector3(
+          (Math.random() - 0.5) * 8,
+          (Math.random() - 0.5) * 8,
+          (Math.random() - 0.5) * 8,
+        ),
+        life: 3 + Math.random() * 2,
+      });
+    }
+  }
+
+  update(delta: number) {
+    if (!this.active) return;
+    let allDead = true;
+    for (let i = this.pieces.length - 1; i >= 0; i--) {
+      const p = this.pieces[i];
+      p.life -= delta;
+      if (p.life <= 0) {
+        this.scene.remove(p.mesh);
+        this.pieces.splice(i, 1);
+        continue;
+      }
+      allDead = false;
+      p.vy -= 3 * delta; // gravity
+      p.mesh.position.x += p.vx * delta;
+      p.mesh.position.y += p.vy * delta;
+      p.mesh.position.z += p.vz * delta;
+      p.mesh.rotation.x += p.rotSpeed.x * delta;
+      p.mesh.rotation.y += p.rotSpeed.y * delta;
+      p.mesh.rotation.z += p.rotSpeed.z * delta;
+      const mat = p.mesh.material as MeshStandardMaterial;
+      if (p.life < 1) mat.opacity = p.life;
+    }
+    if (allDead) this.active = false;
+  }
+
+  clear() {
+    for (const p of this.pieces) this.scene.remove(p.mesh);
+    this.pieces = [];
+    this.active = false;
+  }
+}
+
+// ─── Adaptive AI ────────────────────────────────────────────────────
+class AdaptiveAI {
+  private sessionWins = 0;
+  private sessionLosses = 0;
+  private adjustedDepth = 0;
+
+  recordResult(playerWon: boolean) {
+    if (playerWon) this.sessionWins++;
+    else this.sessionLosses++;
+  }
+
+  getAdjustedDepth(baseDepth: number): number {
+    const diff = this.sessionWins - this.sessionLosses;
+    // If player is winning a lot, AI plays deeper; if losing, AI plays shallower
+    if (diff >= 3) this.adjustedDepth = Math.min(baseDepth + 2, 8);
+    else if (diff >= 1) this.adjustedDepth = Math.min(baseDepth + 1, 7);
+    else if (diff <= -3) this.adjustedDepth = Math.max(baseDepth - 2, 1);
+    else if (diff <= -1) this.adjustedDepth = Math.max(baseDepth - 1, 2);
+    else this.adjustedDepth = baseDepth;
+    return this.adjustedDepth;
+  }
+
+  getSessionRecord(): string {
+    return `AI Record: ${this.sessionLosses}W-${this.sessionWins}L`;
   }
 }
 
@@ -1519,6 +1831,7 @@ class UIManager {
   private audio!: AudioManager;
   private renderer!: BoardRenderer;
   private columnArrows: ColumnArrows | null = null;
+  private columnLabels: ColumnLabels | null = null;
   private panels: Map<string, { entity: any; doc: UIKitDocument | null; }> = new Map();
   private panelEntities: Map<string, any> = new Map();
   private toastEntity: any;
@@ -1532,12 +1845,13 @@ class UIManager {
     'help', 'skins', 'replay',
   ];
 
-  init(world: World, game: GameManager, audio: AudioManager, renderer: BoardRenderer, columnArrows?: ColumnArrows) {
+  init(world: World, game: GameManager, audio: AudioManager, renderer: BoardRenderer, columnArrows?: ColumnArrows, columnLabels?: ColumnLabels) {
     this.world = world;
     this.game = game;
     this.audio = audio;
     this.renderer = renderer;
     this.columnArrows = columnArrows ?? null;
+    this.columnLabels = columnLabels ?? null;
 
     // Create all panels as Follower (head-locked HUDs)
     for (const name of this.PANEL_NAMES) {
@@ -1676,7 +1990,7 @@ class UIManager {
         break;
 
       case 'skins':
-        for (let i = 1; i <= 10; i++) {
+        for (let i = 1; i <= 12; i++) {
           const idx = i - 1;
           btn(`skin-${i}`, () => {
             if (skinUnlocked(idx)) { save.equippedSkin = idx; writeSave(); ui.updateSkins(); }
@@ -1723,6 +2037,8 @@ class UIManager {
     this.renderer.startEntryAnimation();
     // Rebuild column arrows for the current grid size
     if (this.columnArrows) this.columnArrows.rebuild(this.game.cols, new Vector3(0, BOARD_Y, BOARD_Z));
+    // Rebuild column labels
+    if (this.columnLabels) this.columnLabels.rebuild(this.game.cols, new Vector3(0, BOARD_Y, BOARD_Z));
 
     // Rebuild existing discs (for daily challenge first move)
     for (let c = 0; c < this.game.cols; c++) {
@@ -1983,7 +2299,7 @@ class UIManager {
   updateSkins() {
     const doc = this.panels.get('skins')?.doc;
     if (!doc) return;
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 1; i <= 12; i++) {
       const el = doc.getElementById(`skin-${i}`) as UIKit.Text | undefined;
       if (!el) continue;
       const skin = SKINS[i - 1];
@@ -1991,7 +2307,7 @@ class UIManager {
       const equipped = save.equippedSkin === i - 1;
       el.setProperties({
         text: `${skin.name}${equipped ? ' [EQUIPPED]' : unlocked ? '' : ` - ${skin.req}`}`,
-        color: equipped ? '#ffffff' : unlocked ? skin.color.toString(16).padStart(6, '0').replace(/^/, '#') : '#666666',
+        color: equipped ? '#ffffff' : unlocked ? '#' + skin.color.toString(16).padStart(6, '0') : '#666666',
       });
     }
   }
@@ -2051,8 +2367,14 @@ class GameLoopSystem extends createSystem({
   private holoRings!: HoloRings;
   private replayAutoTimer = 0;
   private musicStarted = false;
+  private commentary!: AICommentary;
+  private columnLabels!: ColumnLabels;
+  private bounceController!: DiscBounceController;
+  private confetti!: ConfettiSystem;
+  private adaptiveAI!: AdaptiveAI;
+  private framePulseIntensity = 0;
 
-  setRefs(refs: { game: GameManager; boardRenderer: BoardRenderer; uiManager: UIManager; audio: AudioManager; particles: ParticleSystem; ambient: AmbientParticles; winLine: WinLineRenderer; music: MusicSystem; columnArrows: ColumnArrows; reflection: BoardReflection; timerWarning: TimerWarning; aiIndicator: AIThinkingIndicator; holoRings: HoloRings; }) {
+  setRefs(refs: { game: GameManager; boardRenderer: BoardRenderer; uiManager: UIManager; audio: AudioManager; particles: ParticleSystem; ambient: AmbientParticles; winLine: WinLineRenderer; music: MusicSystem; columnArrows: ColumnArrows; reflection: BoardReflection; timerWarning: TimerWarning; aiIndicator: AIThinkingIndicator; holoRings: HoloRings; commentary: AICommentary; columnLabels: ColumnLabels; bounceController: DiscBounceController; confetti: ConfettiSystem; adaptiveAI: AdaptiveAI; }) {
     this.game = refs.game;
     this.boardRenderer = refs.boardRenderer;
     this.uiManager = refs.uiManager;
@@ -2066,6 +2388,11 @@ class GameLoopSystem extends createSystem({
     this.timerWarning = refs.timerWarning;
     this.aiIndicator = refs.aiIndicator;
     this.holoRings = refs.holoRings;
+    this.commentary = refs.commentary;
+    this.columnLabels = refs.columnLabels;
+    this.bounceController = refs.bounceController;
+    this.confetti = refs.confetti;
+    this.adaptiveAI = refs.adaptiveAI;
   }
 
   update(delta: number, time: number) {
@@ -2098,6 +2425,21 @@ class GameLoopSystem extends createSystem({
     this.reflection.update(time, theme.grid);
     this.aiIndicator.update(time);
     this.holoRings.update(time);
+    this.columnLabels.update(time);
+    this.confetti.update(delta);
+
+    // Bounce controller - check for landed discs
+    const landed = this.bounceController.update(delta);
+    for (const mesh of landed) {
+      // Small shake on final bounce
+      this.boardRenderer.triggerShake(0.005);
+    }
+
+    // Board frame pulse decay
+    if (this.framePulseIntensity > 0) {
+      this.framePulseIntensity *= 0.92;
+      if (this.framePulseIntensity < 0.01) this.framePulseIntensity = 0;
+    }
 
     // AI thinking indicator visibility
     this.aiIndicator.setActive(this.game.aiThinking);
@@ -2183,12 +2525,25 @@ class GameLoopSystem extends createSystem({
     if (this.game.aiThinking) {
       this.aiDelay -= delta;
       if (this.aiDelay <= 0) {
+        // Use adaptive AI depth
+        const baseDepth = this.game.difficulty === 'easy' ? 2 : this.game.difficulty === 'medium' ? 4 : 6;
+        const adjustedDepth = this.adaptiveAI.getAdjustedDepth(baseDepth);
+
+        // Check if AI would block a player threat
+        const threatsBefore = this.game.countThreats(1);
         const col = aiMove(this.game.board.clone(), this.game.difficulty);
         if (col >= 0) {
           const result = this.game.makeMove(col);
           if (result) {
             this.boardRenderer.addDisc(col, result.row, result.player, this.game);
             this.audio.dropMusical(col, this.game.cols);
+            const threatsAfter = this.game.countThreats(1);
+            const blocked = threatsAfter < threatsBefore;
+
+            // AI commentary
+            const taunt = this.commentary.onAIMove(blocked);
+            if (taunt) this.uiManager.showToast(`AI: ${taunt}`);
+
             // Schedule particle splash for AI drop
             const dropTime = (this.game.rows - result.row) * CELL / DROP_SPEED;
             setTimeout(() => {
@@ -2196,6 +2551,7 @@ class GameLoopSystem extends createSystem({
               this.particles.emitDropSplash(pos.x, pos.y, pos.z, new Color(0xff44ff));
               this.boardRenderer.triggerShake(0.008);
               this.boardRenderer.markLastMove(col, result.row, this.game);
+              this.framePulseIntensity = 0.5;
             }, dropTime * 1000);
           }
         }
@@ -2237,6 +2593,8 @@ class GameLoopSystem extends createSystem({
     if (newHovered >= 0) {
       this.boardRenderer.highlightColumn(newHovered, this.game.currentPlayer);
       this.columnArrows.highlight(newHovered, this.game.currentPlayer);
+      const hoverColor = this.game.currentPlayer === 1 ? 0x00ffff : 0xff44ff;
+      this.columnLabels.highlight(newHovered, hoverColor);
       // Show ghost disc at landing row
       const topRow = this.game.board.topRow(newHovered);
       const landRow = topRow + 1;
@@ -2258,6 +2616,7 @@ class GameLoopSystem extends createSystem({
       this.boardRenderer.clearHighlight();
       this.boardRenderer.hideGhost();
       this.columnArrows.clearAll();
+      this.columnLabels.clearHighlight();
     }
   }
 
@@ -2351,6 +2710,13 @@ class GameLoopSystem extends createSystem({
     this.audio.dropMusical(col, this.game.cols);
     this.boardRenderer.hideGhost();
     this.hintActive = false;
+    this.framePulseIntensity = 0.3;
+
+    // Check for combo and trigger commentary
+    if (this.game.comboCount >= 2) {
+      const comboTaunt = this.commentary.onCombo();
+      if (comboTaunt) this.uiManager.showToast(comboTaunt);
+    }
 
     // Schedule particle splash and shake when disc lands
     const dropTime = (this.game.rows - result.row) * CELL / DROP_SPEED;
@@ -2385,17 +2751,38 @@ class GameLoopSystem extends createSystem({
         // Draw win line
         this.winLine.show(winPositions, winColor);
         this.boardRenderer.triggerShake(0.025);
+        this.framePulseIntensity = 1;
+
+        // Victory confetti for player wins
+        if (this.game.winner === 1) {
+          const confettiCenter = new Vector3(0, BOARD_Y + 0.5, BOARD_Z + 0.5);
+          const confettiColors = [0x00ffff, 0xff44ff, 0xffcc00, 0x44ff44, 0xff6644, 0x8844ff];
+          this.confetti.emit(confettiCenter, 60, confettiColors);
+        }
       }
 
       if (this.game.winner === 1) this.audio.win();
       else if (this.game.winner === 2) this.audio.lose();
       else this.audio.draw();
 
+      // AI commentary on game end
+      if (!this.game.vsMode && this.game.winner !== 0) {
+        const endTaunt = this.commentary.onGameEnd(this.game.winner === 2);
+        if (endTaunt) {
+          setTimeout(() => this.uiManager.showToast(`AI: ${endTaunt}`), 1200);
+        }
+      }
+
+      // Adaptive AI tracking
+      if (!this.game.vsMode) {
+        this.adaptiveAI.recordResult(this.game.winner === 1);
+      }
+
       // Check achievements
       const newAchs = this.game.checkAchievements();
       if (newAchs.length > 0) {
         this.audio.achievement();
-        this.uiManager.showToast(`Achievement: ${newAchs[0]}!`);
+        setTimeout(() => this.uiManager.showToast(`Achievement: ${newAchs[0]}!`), 2400);
       }
 
       this.uiManager.showPanel('gameover');
@@ -2450,6 +2837,13 @@ async function main() {
   const aiIndicator = new AIThinkingIndicator(world.scene);
   const holoRings = new HoloRings(world.scene, theme.grid);
 
+  // New systems
+  const commentary = new AICommentary();
+  const columnLabels = new ColumnLabels(world.scene, COLS_STD, new Vector3(0, BOARD_Y, BOARD_Z));
+  const bounceController = new DiscBounceController();
+  const confetti = new ConfettiSystem(world.scene);
+  const adaptiveAI = new AdaptiveAI();
+
   // Background music
   const music = new MusicSystem();
   const musicGain = audio.getMusicGain();
@@ -2462,10 +2856,10 @@ async function main() {
   world.registerSystem(GameLoopSystem);
 
   const uiManager = new UIManager();
-  uiManager.init(world, game, audio, boardRenderer, columnArrows);
+  uiManager.init(world, game, audio, boardRenderer, columnArrows, columnLabels);
 
   const loop = world.getSystem(GameLoopSystem)!;
-  loop.setRefs({ game, boardRenderer, uiManager, audio, particles, ambient, winLine, music, columnArrows, reflection, timerWarning, aiIndicator, holoRings });
+  loop.setRefs({ game, boardRenderer, uiManager, audio, particles, ambient, winLine, music, columnArrows, reflection, timerWarning, aiIndicator, holoRings, commentary, columnLabels, bounceController, confetti, adaptiveAI });
 }
 
 main().catch(console.error);
